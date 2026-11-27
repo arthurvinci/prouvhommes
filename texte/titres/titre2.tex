@@ -1,7 +1,50 @@
 \section{Titre II --- La fin du contrat}
 
-% À rédiger : préavis, motivation sur demande, congé abusif,
-% périodes de protection, résiliation immédiate pour juste motif.
+% À rédiger (phase 6) : congé abusif.
+
+\article{Causes de fin}\label{art:causes}
+Le contrat ne prend fin que par une rupture pendant la période d'essai, une
+résiliation ordinaire, une résiliation immédiate pour juste motif, un accord
+écrit des parties ou le décès du salarié. L'écoulement du temps n'y met
+jamais fin.
+\lean{CauseFin}
+\lean{execute}
+\theoreme{fin_justifiee}
+\theoreme{pas_de_terme}
+
+\article{Délais et ancienneté}\label{art:delais}
+I. --- Les préavis se comptent en jours. Une notification prend effet le jour
+de sa réception ; le préavis court à partir du lendemain. Le dernier jour du
+préavis est le dernier jour du contrat.
+
+II. --- L'ancienneté se compte en jours depuis le début du contrat. Une année
+révolue compte trois cent soixante-cinq jours ; le nombre de mois révolus est
+la partie entière de douze fois le nombre de jours, divisé par trois cent
+soixante-cinq.
+\lean{anneesRevolues}
+\lean{moisRevolus}
+
+\article[relative]{Résiliation ordinaire}\label{art:resiliation}
+I. --- Après la période d'essai, chaque partie peut résilier le contrat à tout
+moment, sans motif, moyennant un préavis de :
+\begin{itemize}
+  \item trente jours si le salarié a moins d'un an d'ancienneté ;
+  \item soixante jours s'il a d'un an à moins de neuf ans d'ancienneté ;
+  \item quatre-vingt-dix jours au-delà.
+\end{itemize}
+L'ancienneté s'apprécie au jour de la réception de la notification.
+
+II. --- Le contrat peut allonger le préavis dû par l'employeur.
+\lean{preavisOrdinaire}
+\theoreme{preavisLegal_monotone}
+\theoreme{fin_resiliationOrdinaire}
+\theoreme{duree_minimale}
+
+\article[relative]{Motivation sur demande}
+La partie qui résilie le contrat en indique le motif par écrit si l'autre
+partie le demande. L'absence de motivation n'affecte pas la validité de la
+résiliation.
+\horsformalisation{obligation d'information, sans effet sur la machine à états}
 
 \article[relative]{Indemnité de rupture}\label{art:indemnite}
 I. --- En cas de résiliation ordinaire du contrat par l'employeur, le
@@ -13,12 +56,14 @@ II. --- Le montant de l'indemnité est
   \qquad\text{avec}\qquad S(t) = 3t^2 - 2t^3,
 \]
 où $SR$ est le salaire de référence défini à l'article~\ref{art:salaire-reference}
-et $m$ l'ancienneté du salarié en mois révolus à la fin du contrat.
+et $m$ l'ancienneté du salarié en mois révolus au dernier jour du contrat
+(article~\ref{art:delais}).
 Le montant est arrondi au centime d'euro inférieur. Aucun calcul intermédiaire
 n'est arrondi.
 
 III. --- L'indemnité n'est due ni en cas de démission, ni en cas de rupture
-pendant la période d'essai, ni en cas de résiliation immédiate pour juste motif.
+pendant la période d'essai, ni en cas de résiliation immédiate pour juste motif,
+ni en cas d'accord écrit des parties ou de décès du salarié.
 \lean{indemniteRupture}
 \theoreme{indemniteRupture_le_plafond}
 \theoreme{indemniteRupture_manipulation}
@@ -50,3 +95,34 @@ mois suivant, il devient la somme d'un vingt-quatrième du salaire de ce mois et
 des vingt-trois vingt-quatrièmes du salaire de référence précédent.
 \lean{salaireReference}
 \theoreme{salaireReference_sensibilite}
+
+\article[relative]{Périodes de protection}
+I. --- Après la période d'essai, pendant une incapacité de travail du salarié
+ou son congé de maternité :
+\begin{itemize}
+  \item la résiliation ordinaire notifiée par l'employeur est nulle ;
+  \item le préavis d'une résiliation ordinaire de l'employeur déjà notifiée
+        est suspendu, et reprend à la fin de la période de protection.
+\end{itemize}
+
+II. --- La protection ne fait obstacle ni à la démission du salarié, ni à
+une résiliation immédiate pour juste motif.
+\lean{suspendu}
+\theoreme{protection_nullite}
+\theoreme{protection_suspend}
+\theoreme{protection_salarie_libre}
+
+\article[absolue]{Résiliation immédiate pour juste motif}
+Chaque partie peut résilier le contrat sans préavis pour juste motif. Le
+contrat prend fin le jour de la réception de la résiliation. Le juste motif
+est une notion ouverte, appréciée par le juge.
+\lean{Interpretation.justeMotif}
+\theoreme{fin_resiliationImmediate}
+
+\article{Accord écrit et décès}
+I. --- Les parties peuvent mettre fin au contrat d'un commun accord, par écrit,
+sans préavis.
+
+II. --- Le contrat prend fin de plein droit au décès du salarié.
+\lean{CauseFin.accordCommun}
+\lean{CauseFin.deces}
