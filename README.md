@@ -27,12 +27,14 @@ cd texte && latexmk -pdf main.tex
 
 **La formalisation Lean**
 
-Il faut [elan](https://github.com/leanprover/elan). Au premier lancement, le script aligne la version de Lean sur celle de Mathlib et télécharge le cache :
+Il faut [elan](https://github.com/leanprover/elan). La version de Lean et la révision de Mathlib sont épinglées dans le dépôt (`lean/lean-toolchain`, `lean/lake-manifest.json`). Au premier lancement, le script télécharge le cache de Mathlib :
 
 ```sh
-./scripts/bootstrap-lean.sh
+./scripts/setup-lean.sh
 cd lean && lake build
 ```
+
+La compilation échoue si une preuve contient `sorry` (cf. `lean/Prouvhommes/Vitrine.lean` et `scripts/check-sorry.sh`). Pour passer à une version plus récente de Mathlib, lancer `./scripts/update-mathlib.sh` puis commiter les deux fichiers épinglés.
 
 **La version Catala** : à venir.
 

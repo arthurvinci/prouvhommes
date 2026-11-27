@@ -1,1 +1,15 @@
 import Prouvhommes.Basic
+import Prouvhommes.Interpretation
+import Prouvhommes.Smoothstep
+import Prouvhommes.SalaireReference
+import Prouvhommes.Indemnite
+import Prouvhommes.Preavis
+import Prouvhommes.Contrat
+import Prouvhommes.Rupture
+import Prouvhommes.CongeAbusif
+import Prouvhommes.Hierarchie
+import Prouvhommes.TempsDeTravail
+import Prouvhommes.HeuresSup
+import Prouvhommes.Conges
+import Prouvhommes.PrincipesGeneraux
+import Prouvhommes.Vitrine

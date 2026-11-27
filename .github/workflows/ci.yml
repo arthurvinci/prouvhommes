@@ -24,8 +24,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Aligner la toolchain sur Mathlib
-        run: curl -fsSL https://raw.githubusercontent.com/leanprover-community/mathlib4/master/lean-toolchain -o lean/lean-toolchain
+      # La toolchain et la révision de Mathlib sont épinglées dans le dépôt
+      # (lean/lean-toolchain, lean/lake-manifest.json). Pour les changer :
+      # scripts/update-mathlib.sh, en local.
+      - name: Aucun sorry
+        run: ./scripts/check-sorry.sh
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: lean
