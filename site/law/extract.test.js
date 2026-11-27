@@ -35,6 +35,23 @@ describe("law extraction", () => {
     expect(d.doc).toMatch(/Coefficient/);
   });
 
+  test("structure fields and inductive constructors are indexed by dotted name", () => {
+    const field = decls.get("Contrat.dureeEssai");
+    expect(field.kind).toBe("field");
+    expect(field.source).toMatch(/^ {2}dureeEssai : ℕ/);
+    expect(field.doc).toMatch(/période d'essai/);
+    expect(field.parent).toMatchObject({ name: "Contrat", kind: "structure" });
+
+    const ctor = decls.get("CauseFin.deces");
+    expect(ctor.kind).toBe("constructor");
+    expect(ctor.source.trim()).toBe("| deces");
+    expect(ctor.doc).toMatch(/Décès/);
+    expect(ctor.parent.header).toBe("inductive CauseFin");
+
+    // `deriving` clauses are not constructors.
+    expect(decls.has("CauseFin.deriving")).toBe(false);
+  });
+
   test("showcase theorems are proved and carry a summary", () => {
     const plafond = showcase.find((e) => e.name === "indemniteRupture_le_plafond");
     expect(plafond.summary).toMatch(/T-PLAFOND/);
