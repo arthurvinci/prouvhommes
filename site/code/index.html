@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      // Stored theme, applied before first paint (see src/theme.js).
+      try {
+        document.querySelector('meta[name="color-scheme"]').content =
+          localStorage.getItem("color-scheme") ?? "light dark";
+      } catch {}
+    </script>
+    <title>Le code — Prouv'hommes</title>
+    <meta
+      name="description"
+      content="Le texte du code du travail Prouv'hommes, article par article, face à sa formalisation en Lean."
+    />
+    <script type="module" src="/src/code.js"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/">Prouv'hommes</a>
+      <nav aria-label="Navigation principale">
+        <a href="/code/" aria-current="page">Le code</a>
+        <a href="https://github.com/arthurvinci/prouvhommes">Sources</a>
+      </nav>
+      <button type="button" class="theme-toggle" data-theme-toggle aria-pressed="false">
+        <span data-label>Thème sombre</span>
+      </button>
+    </header>
+
+    <div class="variant-banner" data-variant-banner hidden>
+      <p>
+        Vous lisez une <strong>variante</strong> du code :
+        <span data-variant-summary></span>.
+        Les preuves Lean ne portent que sur le texte du code.
+      </p>
+      <button type="button" data-reset-params>Revenir au texte du code</button>
+    </div>
+
+    <div class="reader">
+      <nav class="reader-toc" aria-label="Articles">
+        <!--law:toc-->
+      </nav>
+
+      <main class="reader-main">
+        <header class="reader-intro">
+          <h1>Le code</h1>
+          <p class="section-lede">
+            Chaque article a deux faces : le texte et sa formalisation en Lean. Survolez ou
+            sélectionnez une expression pour voir son pendant de l'autre côté. Les nombres
+            soulignés en pointillé se modifient : les garanties sont alors recalculées.
+            Les cadres en pointillé sont les notions laissées au juge ; les théorèmes tiennent
+            quoi qu'il y mette.
+          </p>
+        </header>
+        <!--law:articles-->
+      </main>
+    </div>
+
+    <div id="param-editor" class="param-editor" popover>
+      <label class="param-label" for="param-range" data-param-label></label>
+      <input id="param-range" type="range" class="slider" />
+      <p class="param-value" data-param-value aria-live="polite"></p>
+      <p class="param-law" data-param-law></p>
+    </div>
+  </body>
+</html>

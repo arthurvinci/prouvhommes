@@ -23,7 +23,7 @@
 
 - **Texte de loi** : serif (Source Serif 4) sur fond papier.
 - **Chiffres, numéros d'article, résultats, interface** : grotesque (Inter Tight), en grand corps.
-- **Lean** : JetBrains Mono. **Formules** : MathML natif.
+- **Lean** : JetBrains Mono. **Formules** : HTML et typographie mathématique, car les seuils vivants (des boutons) ne peuvent pas vivre dans du MathML.
 - Polices auto-hébergées (pas d'appel à Google Fonts).
 - **Un seul accent** : bordeaux. Lien droit ↔ maths = surlignage bordeaux pâle ; nombre vivant = soulignement pointillé ; trou = cadre pointillé gris.
 
@@ -43,7 +43,9 @@ Valeurs indicatives, à vérifier au contraste (WCAG AA) pendant l'implémentati
 
 ## Technique
 
-- **Vanilla + Vite**, site statique dans `site/`, déployé sur GitHub Pages. Web components, fonctionnalités natives (popover, container queries, view transitions, Highlight API), selon la Modern Web Guidance.
+- **Vanilla + Vite**, site statique dans `site/`, déployé par Vercel (aperçu sur chaque PR). Fonctionnalités natives (popover ancré, container queries, Highlight API, `color-scheme` piloté par `<meta>`), selon la Modern Web Guidance.
 - **Calcul exact** (M5) : rationnels en `BigInt`, un seul arrondi final au centime inférieur, comme en Lean. Jamais de flottants pour un montant affiché.
 - **Langue** : les textes du site sont en français ; le code est en anglais (identifiants, commentaires, classes CSS, jetons).
-- **Contenu découplé** : un format de données par article (texte, liens texte ↔ identifiants Lean, notions ouvertes, impérativité, promesses et statut). On démarre sur P6, déjà décidé ; le reste se remplit au fil de la rédaction.
+- **Contenu lu à la source** (`site/law/`) : au build, le site lit `texte/` (numéro, titre, impérativité, `\lean`, `\theoreme` de chaque article) et `lean/` (source et docstring des déclarations ; statut « prouvé » pour les théorèmes épinglés dans `Vitrine.lean`). Rien n'est recopié à la main.
+- **Articles annotés** (`site/law/enriched.js`) : pour les articles interactifs, une copie du texte avec les liens droit ↔ Lean, les seuils vivants et les notions ouvertes. Le build avertit si le LaTeX de l'article change. Les autres articles sont rendus tels quels depuis le LaTeX.
+- **Variantes** : les seuils modifiés passent dans l'URL (`/code/?plafond=7`), pour partager une variante. Une variante n'affiche jamais « prouvé » : soit un contre-exemple, soit « vérifiée par le calcul ».
