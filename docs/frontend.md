@@ -29,13 +29,13 @@
 
 | Jeton | Clair | Sombre |
 |---|---|---|
-| `--papier` | `#F7F3EA` | `#1A1714` |
-| `--encre` | `#2A2620` | `#E9E2D4` |
-| `--encre-douce` | `#6B6355` | `#A79E8D` |
-| `--filet` | `#D9CFBC` | `#3A332B` |
-| `--bordeaux` | `#8A2E2A` | `#D98A80` |
-| `--lien-fond` / `--lien-texte` | `#EBD3CF` / `#6E1F1B` | `#4A2522` / `#F2C9C2` |
-| `--code-fond` | `#EFE8D8` | `#24201B` |
+| `--paper` | `#F7F3EA` | `#1A1714` |
+| `--ink` | `#2A2620` | `#E9E2D4` |
+| `--ink-soft` | `#6B6355` | `#A79E8D` |
+| `--rule` | `#D9CFBC` | `#3A332B` |
+| `--accent` (bordeaux) | `#8A2E2A` | `#D98A80` |
+| `--link-bg` / `--link-fg` | `#EBD3CF` / `#6E1F1B` | `#4A2522` / `#F2C9C2` |
+| `--code-bg` | `#EFE8D8` | `#24201B` |
 
 Valeurs indicatives, à vérifier au contraste (WCAG AA) pendant l'implémentation.
 
@@ -45,4 +45,5 @@ Valeurs indicatives, à vérifier au contraste (WCAG AA) pendant l'implémentati
 
 - **Vanilla + Vite**, site statique dans `site/`, déployé sur GitHub Pages. Web components, fonctionnalités natives (popover, container queries, view transitions, Highlight API), selon la Modern Web Guidance.
 - **Calcul exact** (M5) : rationnels en `BigInt`, un seul arrondi final au centime inférieur, comme en Lean. Jamais de flottants pour un montant affiché.
+- **Langue** : le site et son code sont en anglais (identifiants, commentaires, classes CSS, textes de l'interface).
 - **Contenu découplé** : un format de données par article (texte, liens texte ↔ identifiants Lean, notions ouvertes, impérativité, promesses et statut). On démarre sur P6, déjà décidé ; le reste se remplit au fil de la rédaction.
