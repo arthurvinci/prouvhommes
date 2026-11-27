@@ -2,6 +2,9 @@ import Prouvhommes.Preavis
 import Prouvhommes.Indemnite
 import Prouvhommes.Rupture
 import Prouvhommes.Hierarchie
+import Prouvhommes.TempsDeTravail
+import Prouvhommes.HeuresSup
+import Prouvhommes.Conges
 
 /-!
 # Vitrine
@@ -133,5 +136,73 @@ namespace Prouvhommes
 
 /-- info: 'Prouvhommes.dureeEssai_le_max' depends on axioms: [propext] -/
 #guard_msgs in #print axioms dureeEssai_le_max
+
+/-! ## Temps de travail et congés (P10 à P13) -/
+
+/-! Les journées de travail partitionnent le planning. -/
+
+/-- info: 'Prouvhommes.grouper_flatten' depends on axioms: [propext] -/
+#guard_msgs in #print axioms grouper_flatten
+
+/-! Avec le repos quotidien, aucune journée ne compte plus de 13 h de travail. -/
+
+/-- info: 'Prouvhommes.travail_journee_le_13h' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms travail_journee_le_13h
+
+/-! Avec les pauses, on ne travaille jamais 6 h d'affilée. -/
+
+/-- info: 'Prouvhommes.travail_continu_lt_6h' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms travail_continu_lt_6h
+
+/-! La période de référence ne dépasse jamais 52 semaines. -/
+
+/-- info: 'Prouvhommes.periodeReference_le_52' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms periodeReference_le_52
+
+/-! Un travailleur de nuit ne travaille jamais plus de 8 h dans une journée. -/
+
+/-- info: 'Prouvhommes.travail_nuit_journee_le_8h' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in #print axioms travail_nuit_journee_le_8h
+
+/-! Chaque règle de santé a un sens : repos quotidien. -/
+
+/-- info: 'Prouvhommes.reposQuotidien_independant' depends on axioms: [propext] -/
+#guard_msgs in #print axioms reposQuotidien_independant
+
+/-! Chaque règle de santé a un sens : repos hebdomadaire. -/
+
+/-- info: 'Prouvhommes.reposHebdomadaire_independant' depends on axioms: [propext] -/
+#guard_msgs in #print axioms reposHebdomadaire_independant
+
+/-! Chaque règle de santé a un sens : pauses. -/
+
+/-- info: 'Prouvhommes.pauses_independantes' depends on axioms: [propext] -/
+#guard_msgs in #print axioms pauses_independantes
+
+/-! Chaque règle de santé a un sens : 48 h en moyenne. -/
+
+/-- info: 'Prouvhommes.moyenne48h_independante' depends on axioms: [propext] -/
+#guard_msgs in #print axioms moyenne48h_independante
+
+/-! Chaque règle de santé a un sens : travail de nuit. -/
+
+/-- info: 'Prouvhommes.nuit8h_independante' depends on axioms: [propext] -/
+#guard_msgs in #print axioms nuit8h_independante
+
+
+/-! Une heure supplémentaire est payée au moins au taux normal. -/
+
+/-- info: 'Prouvhommes.paiementHS_ge_normal' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms paiementHS_ge_normal
+
+/-! Le droit à congés n'est jamais inférieur à 20 jours. -/
+
+/-- info: 'Prouvhommes.conges_ge_legal' depends on axioms: [propext] -/
+#guard_msgs in #print axioms conges_ge_legal
+
+/-! Pas de rachat des congés pendant le contrat. -/
+
+/-- info: 'Prouvhommes.pas_de_rachat_conges' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms pas_de_rachat_conges
 
 end Prouvhommes
