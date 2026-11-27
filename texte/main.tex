@@ -6,6 +6,8 @@
 \usepackage[margin=2.5cm]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{hyperref}
+% Empreinte des sources, fournie par scripts/build-pdf.sh (cf. check-pdf.sh).
+\ifdefined\empreinte\pdfinfo{/Sources (\empreinte)}\fi
 
 % --- Articles et correspondance avec la formalisation ----------------------
 % \article[niveau]{Titre}    niveau d'impérativité (M4) : absolue, relative

@@ -30,6 +30,17 @@ describe("law extraction", () => {
     expect(missing).toEqual([]);
   });
 
+  // The level printed in the text (M4) must be the one Lean computes with.
+  test("articles have the level of the Lean dispositions they cite", () => {
+    const mismatches = articles.flatMap((a) =>
+      a.lean
+        .map((name) => [name, decls.get(name)?.source.match(/niveau := \.(\w+)/)?.[1]])
+        .filter(([, level]) => level && level !== a.level)
+        .map(([name, level]) => `${a.label ?? a.title}: ${a.level ?? "no level"} ≠ ${name} (${level})`),
+    );
+    expect(mismatches).toEqual([]);
+  });
+
   test("declarations keep their source and docstring", () => {
     const d = decls.get("coefficient");
     expect(d.kind).toBe("def");
