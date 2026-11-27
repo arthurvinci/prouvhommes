@@ -22,8 +22,16 @@
 
 **Le texte (PDF)**
 
+La dernière version compilée est versionnée : [`texte/prouvhommes.pdf`](texte/prouvhommes.pdf). Pour la régénérer :
+
 ```sh
-cd texte && latexmk -pdf main.tex
+./scripts/build-pdf.sh
+```
+
+Un hook git recompile le PDF et l'ajoute à chaque commit. Le build est reproductible : un commit qui ne touche pas au texte ne change pas le PDF. Pour activer le hook, une fois par clone (TeX Live requis) :
+
+```sh
+./scripts/install-hooks.sh
 ```
 
 **La formalisation Lean**
