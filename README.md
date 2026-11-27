@@ -59,7 +59,7 @@ Chaque PR qui touche `site/` reçoit un aperçu Vercel ; `main` est le site en p
 
 ## Vérifications
 
-Toute modification passe par une PR ; la CI lance, selon les fichiers touchés :
+Toute modification passe par une PR, que le propriétaire du dépôt doit approuver (`.github/CODEOWNERS`) ; l'administrateur du dépôt peut passer outre lors de la fusion. La CI lance, selon les fichiers touchés :
 
 | Job | Vérifie |
 |---|---|
