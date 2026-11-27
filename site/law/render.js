@@ -90,7 +90,7 @@ function renderArticle(a, law, warn) {
     ${body}
   </section>
   <section class="face face-lean" data-face="lean" aria-label="Formalisation en Lean">
-    ${decls.length ? decls.map(renderDecl).join("\n") : `<p class="empty">${a.outsideFormalisation.length ? "Hors formalisation." : "Pas encore formalisé."}</p>`}
+    ${decls.length ? groupMembers(decls).map(renderDecl).join("\n") : `<p class="empty">${a.outsideFormalisation.length ? "Hors formalisation." : "Pas encore formalisé."}</p>`}
   </section>
 </div>
 ${a.theorems.length ? renderGuarantees(a, law) : ""}
@@ -117,11 +117,30 @@ function renderGuarantees(a, law) {
 </section>`;
 }
 
-function renderDecl(d) {
-  const doc = d.doc ? `/-- ${d.doc} -/\n` : "";
+/**
+ * Consecutive fields or constructors of the same parent share one figure,
+ * so `CauseFin.accordCommun` and `CauseFin.deces` read as one excerpt.
+ */
+function groupMembers(decls) {
+  const groups = [];
+  for (const d of decls) {
+    const last = groups.at(-1);
+    if (d.parent && last?.[0].parent?.name === d.parent.name) last.push(d);
+    else groups.push([d]);
+  }
+  return groups;
+}
+
+/** One figure: a declaration, or members shown under their parent's header. */
+function renderDecl(group) {
+  const [first] = group;
+  const withDoc = (d, indent) => (d.doc ? `${indent}/-- ${d.doc} -/\n` : "") + d.source;
+  const src = first.parent
+    ? `${first.parent.header}\n  -- …\n${group.map((d) => withDoc(d, "  ")).join("\n")}`
+    : withDoc(first, "");
   return `<figure class="lean-decl">
-<figcaption><a href="${REPO}/${d.file}#L${d.line}">${d.file.replace("lean/", "")}:${d.line}</a></figcaption>
-<pre><code>${highlightLean(doc + d.source)}</code></pre>
+<figcaption><a href="${REPO}/${first.file}#L${first.line}">${first.file.replace("lean/", "")}:${first.line}</a></figcaption>
+<pre><code>${highlightLean(src)}</code></pre>
 </figure>`;
 }
 

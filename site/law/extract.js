@@ -10,7 +10,8 @@ import { join } from "node:path";
  *   label: string | null, id: string, part: string, body: string,
  *   lean: string[], theorems: string[], outsideFormalisation: string[] }} Article
  * @typedef {{ name: string, kind: string, file: string, line: number,
- *   doc: string | null, source: string }} LeanDecl
+ *   doc: string | null, source: string,
+ *   parent: { name: string, kind: string, header: string } | null }} LeanDecl
  * @typedef {{ name: string, summary: string | null }} ShowcaseEntry
  */
 
@@ -49,7 +50,11 @@ export function readArticles(textDir) {
   return articles;
 }
 
-/** Indexes every top-level declaration of lean/Prouvhommes/*.lean by name. */
+/**
+ * Indexes every top-level declaration of lean/Prouvhommes/*.lean by name,
+ * plus structure fields and inductive constructors under their dotted name
+ * (`Contrat.dureeEssai`, `CauseFin.deces`).
+ */
 export function readLeanDecls(leanDir) {
   const dir = join(leanDir, "Prouvhommes");
   /** @type {Map<string, LeanDecl>} */
@@ -61,14 +66,19 @@ export function readLeanDecls(leanDir) {
       if (!m) return;
       let end = i + 1;
       while (end < lines.length && !/^\S/.test(lines[end]) && !(lines[end] === "" && /^\S/.test(lines[end + 1] ?? "x"))) end++;
-      decls.set(m[2], {
+      const decl = {
         name: m[2],
         kind: m[1],
         file: `lean/Prouvhommes/${file}`,
         line: i + 1,
         doc: docBefore(lines, i),
         source: lines.slice(i, end).join("\n").trimEnd(),
-      });
+        parent: null,
+      };
+      decls.set(decl.name, decl);
+      if (decl.kind === "structure" || decl.kind === "inductive") {
+        for (const member of readMembers(lines, i, end, decl)) decls.set(member.name, member);
+      }
     });
   }
   return decls;
@@ -115,6 +125,33 @@ function stripComments(tex) {
 
 function macroArgs(tex, name) {
   return [...tex.matchAll(new RegExp(`\\\\${name}\\{([^}]*)\\}`, "g"))].map((m) => m[1]);
+}
+
+/**
+ * Fields of a structure and constructors of an inductive: the lines indented
+ * one level inside the declaration (lines i..end). A member's source is its
+ * own line plus any more deeply indented continuation lines.
+ */
+function readMembers(lines, i, end, parent) {
+  const pattern =
+    parent.kind === "inductive" ? /^ {2}\|\s*([A-Za-z_][\w']*)/ : /^ {2}([A-Za-z_][\w']*)\s*:(?!=)/;
+  const members = [];
+  for (let j = i + 1; j < end; j++) {
+    const m = lines[j].match(pattern);
+    if (!m) continue;
+    let stop = j + 1;
+    while (stop < end && /^ {3,}\S/.test(lines[stop])) stop++;
+    members.push({
+      name: `${parent.name}.${m[1]}`,
+      kind: parent.kind === "inductive" ? "constructor" : "field",
+      file: parent.file,
+      line: j + 1,
+      doc: docBefore(lines, j),
+      source: lines.slice(j, stop).join("\n").trimEnd(),
+      parent: { name: parent.name, kind: parent.kind, header: lines[i].trimEnd() },
+    });
+  }
+  return members;
 }
 
 function docBefore(lines, i) {
