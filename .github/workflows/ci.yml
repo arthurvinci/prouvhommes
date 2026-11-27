@@ -1,17 +1,56 @@
 name: CI
 
 # Push to main, plus every PR. Without `branches` under push, each PR ran
-# every job twice. The website (site/) is built by Vercel.
+# every job twice.
+#
+# The workflow always runs; each job decides from the changed paths whether it
+# has work to do. A workflow skipped by `paths-ignore` never reports its
+# checks, which leaves the required checks of the "Protect main" ruleset
+# pending forever. A job skipped by `if:` reports "skipped", which they accept.
 on:
   push:
     branches: [main]
-    paths-ignore: ['site/**', 'docs/**', '.claude/**']
   pull_request:
-    paths-ignore: ['site/**', 'docs/**', '.claude/**']
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
+  changes:
+    name: Fichiers modifiés
+    runs-on: ubuntu-latest
+    outputs:
+      texte: ${{ steps.filter.outputs.texte }}
+      lean: ${{ steps.filter.outputs.lean }}
+      site: ${{ steps.filter.outputs.site }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            workflow: &workflow
+              - '.github/workflows/**'
+            texte:
+              - *workflow
+              - 'texte/**'
+            lean:
+              - *workflow
+              - 'lean/**'
+              - 'scripts/check-sorry.sh'
+            # The site reads texte/ and lean/ at build time, and its tests
+            # check that every Lean name cited by the text exists.
+            site:
+              - *workflow
+              - 'site/**'
+              - 'texte/**'
+              - 'lean/**'
+
   texte:
     name: Texte (LaTeX)
+    needs: changes
+    if: needs.changes.outputs.texte == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,6 +65,8 @@ jobs:
 
   lean:
     name: Formalisation (Lean)
+    needs: changes
+    if: needs.changes.outputs.lean == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,3 +78,23 @@ jobs:
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: lean
+
+  # Vercel deploys the site; this job runs its tests, which Vercel does not.
+  site:
+    name: Site (tests et build)
+    needs: changes
+    if: needs.changes.outputs.site == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - run: npm ci
+      - run: npx vitest run
+      - run: npm run build
