@@ -1,0 +1,134 @@
+/* Jetons de docs/frontend.md. light-dark() suit color-scheme, que le
+   bouton de thème force via [data-theme]. */
+:root {
+  color-scheme: light dark;
+
+  --papier: light-dark(#f7f3ea, #1a1714);
+  --encre: light-dark(#2a2620, #e9e2d4);
+  --encre-douce: light-dark(#6b6355, #a79e8d);
+  --filet: light-dark(#d9cfbc, #3a332b);
+  --bordeaux: light-dark(#8a2e2a, #d98a80);
+  --lien-fond: light-dark(#ebd3cf, #4a2522);
+  --lien-texte: light-dark(#6e1f1b, #f2c9c2);
+  --code-fond: light-dark(#efe8d8, #24201b);
+
+  --serif: "Source Serif 4 Variable", Georgia, serif;
+  --grotesque: "Inter Tight Variable", system-ui, sans-serif;
+  --mono: "JetBrains Mono Variable", ui-monospace, monospace;
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--papier);
+  color: var(--encre);
+  font-family: var(--serif);
+  font-size: 1.125rem;
+  line-height: 1.65;
+}
+
+.entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--filet);
+  font-family: var(--grotesque);
+}
+.marque {
+  color: var(--encre);
+  font-weight: 500;
+  text-decoration: none;
+  font-size: 1.125rem;
+}
+.bouton-theme {
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--encre);
+  background: transparent;
+  border: 1px solid var(--filet);
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+}
+.bouton-theme:hover { border-color: var(--encre-douce); }
+:focus-visible { outline: 2px solid var(--bordeaux); outline-offset: 2px; }
+
+main {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0 1.5rem 4rem;
+}
+
+.accroche { padding: 4rem 0 3rem; max-width: 42rem; }
+.surtitre {
+  font-family: var(--grotesque);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bordeaux);
+  margin: 0;
+}
+h1 {
+  font-size: clamp(2.25rem, 1.5rem + 3vw, 3.5rem);
+  font-weight: 500;
+  line-height: 1.1;
+  margin: 0.5rem 0 1rem;
+  text-wrap: balance;
+}
+.chapo { color: var(--encre-douce); margin: 0; text-wrap: pretty; }
+
+.promesse {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--filet);
+}
+.numero {
+  font-family: var(--grotesque);
+  font-size: 5rem;
+  font-weight: 500;
+  line-height: 0.9;
+  color: var(--bordeaux);
+}
+h2 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 1.3;
+  margin: 0 0 0.75rem;
+  text-wrap: balance;
+}
+.article { margin: 0; }
+.lien {
+  background: var(--lien-fond);
+  color: var(--lien-texte);
+  border-bottom: 1.5px dotted var(--bordeaux);
+  padding: 0 0.15em;
+}
+.trou {
+  border: 1px dashed var(--encre-douce);
+  border-radius: 4px;
+  padding: 0 0.3em;
+  color: var(--encre-douce);
+}
+.lean {
+  font-family: var(--mono);
+  font-size: 0.875rem;
+  background: var(--code-fond);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin: 1rem 0 0;
+  overflow-x: auto;
+}
+.statut {
+  font-family: var(--grotesque);
+  font-size: 0.8125rem;
+  color: var(--encre-douce);
+  margin: 1rem 0 0;
+}
