@@ -26,7 +26,7 @@ export function readArticles(textDir) {
     let part = "";
     tokens.forEach((t, i) => {
       if (t[1] !== undefined) {
-        part = t[1].replace(/\s*---\s*/g, " — ");
+        part = t[1].replace(/\s*---\s*/g, " — ").replace(/'/g, "’");
         return;
       }
       const end = i + 1 < tokens.length ? tokens[i + 1].index : src.length;
@@ -35,7 +35,8 @@ export function readArticles(textDir) {
       const number = articles.length + 1;
       articles.push({
         number,
-        title: t[3],
+        // Typographic apostrophe, as in the PDF.
+        title: t[3].replace(/'/g, "’"),
         level: t[2] || null,
         label,
         id: label ? label.replace(/[^\w-]/g, "-") : `article-${number}`,

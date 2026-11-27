@@ -9,7 +9,7 @@ import { cardinal, ordinal, ordinalPlural } from "./french.js";
 export const PARAM_SPECS = {
   capMonths: {
     query: "plafond",
-    label: "Plafond de l'indemnité",
+    label: "Plafond de l’indemnité",
     min: 1, max: 12, step: 1,
     law: 6,
     toParam: (n) => q(n),

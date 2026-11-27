@@ -5,7 +5,9 @@
 
 ## Concepts retenus
 
-1. **Deux faces liées mot à mot.** Chaque article a une face *droit* et une face *maths* (Lean). Survoler ou focaliser un passage du texte (« six mois ») surligne son pendant formel (`6`), et réciproquement. Côte à côte sur grand écran, bascule sur mobile.
+1. **Deux faces liées mot à mot.** Chaque article a une face *droit* et une face *maths* (Lean). Survoler ou focaliser un passage du texte (« six mois ») surligne son pendant formel (`6`), et réciproquement.
+   - La formalisation est **toujours un menu déroulant sous le texte de l'article**, fermé par défaut (décidé le 27/11/2026). Chaque garantie a aussi le sien, avec l'énoncé exact du théorème, sans la preuve.
+   - **Alignement** : le texte du site est celui du PDF (y compris ses tableaux et l'apostrophe typographique) ; `site/law/alignment.test.js` vérifie que les seuils du site sont les constantes Lean, que chaque lien trouve son pendant Lean et qu'aucune commande LaTeX n'atteint une page.
 2. **Les seuils sont des nombres vivants** (M1). Les nombres de l'article sont des contrôles : on les fait varier, la courbe se redessine et chaque promesse est réévaluée (tenue, ou rompue avec un contre-exemple).
    - Honnêteté : seules les promesses calculables sont revérifiées dans le navigateur. Pour les autres, une valeur modifiée affiche « prouvé pour les valeurs actuelles seulement », jamais une coche verte.
 3. **Les notions ouvertes sont des trous** (M2). *Juste motif* et les autres prédicats opaques sont dessinés en cadre pointillé vide, dans le texte comme dans le Lean : le théorème tient quoi que le juge mette dans le cadre.
@@ -15,7 +17,7 @@
 | Module | Contenu |
 |---|---|
 | Lecteur d'articles | Concepts 1 à 3 ; niveau d'impérativité en marge (M4) |
-| Simulateur d'indemnité | P6 exact, courbe smoothstep comparée au droit actuel et à la Suisse |
+| Simulateur d'indemnité | P6 exact, courbe smoothstep comparée au droit actuel |
 | Démo anti-manipulation | Varier le dernier salaire : SR ne bouge que de Δ/24 |
 | Tableau des preuves | Promesses en français, statut (prouvé, `sorry`, à écrire), lien vers le théorème |
 

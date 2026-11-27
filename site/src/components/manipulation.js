@@ -12,8 +12,8 @@ const FIRED = { kind: "ordinaryTermination", party: "employer" };
 /** `compact`: inside an article, without the weights chart (on `fullUrl`). */
 export function initManipulation(root, { compact = false, fullUrl } = {}) {
   root.innerHTML = `
-<h2 class="extra-title">${compact ? "Essayer : peut-on gonfler ou dégonfler l'indemnité ?" : "Simulateur"}</h2>
-<p class="extra-lede">Un salarié payé le même salaire chaque mois est licencié. Juste avant, l'employeur baisse son dernier salaire (ou le salarié obtient une forte prime). Que devient l'indemnité ?</p>
+<h2 class="extra-title">${compact ? "Essayer : peut-on gonfler ou dégonfler l’indemnité ?" : "Simulateur"}</h2>
+<p class="extra-lede">Un salarié payé le même salaire chaque mois est licencié. Juste avant, l’employeur baisse son dernier salaire (ou le salarié obtient une forte prime). Que devient l’indemnité ?</p>
 <div class="simulator">
   <form class="sim-controls" novalidate>
     <div class="field">

@@ -118,7 +118,9 @@ export function renderArticle(a, law, warn, { standalone = false } = {}) {
         `Update the annotated copy, then set sourceHash to "${sourceHash(a.body)}".`,
     );
   }
-  const body = enriched ? resolveRefs(enriched.body, law) : latexToHtml(a.body, law);
+  const body = enriched
+    ? resolveRefs(enriched.body, law) + latexTables(a.body, law)
+    : latexToHtml(a.body, law);
   const declNames = enriched?.leanDecls ?? a.lean;
   const decls = declNames.map((n) => law.decls.get(n)).filter(Boolean);
   const level = LEVELS[a.level];
@@ -135,18 +137,10 @@ export function renderArticle(a, law, warn, { standalone = false } = {}) {
     ${level ? `<p class="level" data-level="${a.level}"><span class="level-mark" aria-hidden="true"></span>Impérativité ${level[0]} : ${level[1]}</p>` : ""}
   </div>
 </header>
-<div class="faces">
-  <div class="face-switch" role="group" aria-label="Face affichée">
-    <button type="button" data-face="law" aria-pressed="true">Droit</button>
-    <button type="button" data-face="lean" aria-pressed="false">Lean</button>
-  </div>
-  <section class="face face-law" data-face="law" aria-label="Texte de l'article">
-    ${body}
-  </section>
-  <section class="face face-lean" data-face="lean" aria-label="Formalisation en Lean">
-    ${decls.length ? groupMembers(decls).map(renderDecl).join("\n") : `<p class="empty">${a.outsideFormalisation.length ? `Hors formalisation : ${escapeHtml(a.outsideFormalisation.join(" ; "))}.` : "Pas encore formalisé."}</p>`}
-  </section>
-</div>
+<section class="face-law" aria-label="Texte de l’article">
+  ${body}
+</section>
+${renderFormalisation(a, decls)}
 ${a.theorems.length ? renderGuarantees(a, law, standalone) : ""}
 ${
   simulator
@@ -154,6 +148,36 @@ ${
     : ""
 }
 </article>`;
+}
+
+/**
+ * The Lean side of an article: always a dropdown right under its text,
+ * closed by default. Opening it shows the declarations; linked phrases of
+ * the text then light up their counterpart in it.
+ */
+function renderFormalisation(a, decls) {
+  if (!decls.length) {
+    const why = a.outsideFormalisation.length
+      ? `Hors formalisation : ${escapeHtml(a.outsideFormalisation.join(" ; "))}.`
+      : "Pas encore formalisé en Lean.";
+    return `<p class="lean-none">${why}</p>`;
+  }
+  const groups = groupMembers(decls);
+  const files = [...new Set(decls.map((d) => d.file.replace("lean/Prouvhommes/", "")))];
+  const count = `${groups.length} ${groups.length > 1 ? "déclarations" : "déclaration"}`;
+  return `<details class="lean-dropdown face-lean">
+  <summary><span class="lean-dropdown-label">Formalisation Lean</span><span class="lean-dropdown-meta">${count} · ${files.map(escapeHtml).join(", ")}</span></summary>
+  <div class="lean-dropdown-body">
+    ${groups.map(renderDecl).join("\n")}
+  </div>
+</details>`;
+}
+
+/** A theorem's statement: its source up to the `:=` that opens the proof. */
+function theoremStatement(decl) {
+  const src = decl.source;
+  const m = src.match(/\s:=(?=\s*(?:by\b|$))/m) ?? src.match(/\s:=/);
+  return m ? `${src.slice(0, m.index).trimEnd()} := …` : src;
 }
 
 function renderGuarantees(a, law, standalone) {
@@ -165,10 +189,21 @@ function renderGuarantees(a, law, standalone) {
   <p class="guarantee-text">${text}</p>
   <p class="guarantee-meta">${statusBadge(proofStatus(name, law.decls))}${tag ? `<span class="promise-tag">${tag}</span>` : ""}${leanLink(name, decl)}</p>
   <p class="guarantee-check" data-check="${name}" aria-live="polite"></p>
+  ${
+    decl
+      ? `<details class="lean-dropdown lean-statement">
+    <summary><span class="lean-dropdown-label">Énoncé Lean</span></summary>
+    <div class="lean-dropdown-body">
+      <pre><code>${highlightLean(theoremStatement(decl))}</code></pre>
+      <p class="lean-proof-link"><a href="${BLOB}/${decl.file}#L${decl.line}">Voir la démonstration dans ${escapeHtml(decl.file.replace("lean/", ""))}</a></p>
+    </div>
+  </details>`
+      : ""
+  }
 </li>`;
   });
-  return `<section class="guarantees" aria-label="Ce que l'article garantit">
-<${h} class="guarantees-title">Ce que l'article garantit</${h}>
+  return `<section class="guarantees" aria-label="Ce que l’article garantit">
+<${h} class="guarantees-title">Ce que l’article garantit</${h}>
 <ul>${items.join("\n")}</ul>
 </section>`;
 }
@@ -296,9 +331,13 @@ export function highlightLean(src) {
 
 /** Converts plain LaTeX (an article without annotated copy, the introduction). */
 export function latexToHtml(tex, law) {
+  const tables = [];
   const cleaned = tex
     .replace(/\\(lean|theoreme|horsformalisation)\{[^}]*\}/g, "")
-    .replace(/\\begin\{center\}[\s\S]*?\\end\{center\}/g, "")
+    .replace(/\\begin\{center\}[\s\S]*?\\end\{center\}/g, (block) => {
+      tables.push(renderTable(block, law));
+      return `\n\n@@table${tables.length - 1}@@\n\n`;
+    })
     .trim();
   const paragraphs = cleaned
     .split(/\n\s*\n|(?=(?:^|\n)\s*[IVX]+\. ---)/)
@@ -307,20 +346,10 @@ export function latexToHtml(tex, law) {
   const LIST = { itemize: "ul", enumerate: "ol", description: "dl" };
   return paragraphs
     .map((p) => {
-      let html = escapeHtml(p.replace(/\s+/g, " "));
+      const table = p.match(/^@@table(\d+)@@$/);
+      if (table) return tables[Number(table[1])];
+      let html = inlineLatex(p.replace(/\s+/g, " "), law);
       html = html
-        .replace(/^([IVX]+)\. ---\s*/, '<span class="para">$1. —</span> ')
-        .replace(/\\\[([\s\S]*?)\\\]/g, (_, m) => `<code class="math-tex">${m.trim()}</code>`)
-        .replace(/\$([^$]+)\$/g, (_, m) => `<var>${m.replace(/\\/g, "")}</var>`)
-        .replace(/---/g, "—")
-        .replace(/--/g, "–")
-        .replace(/~/g, "&nbsp;")
-        .replace(/\\ref\{([^}]+)\}/g, (_, label) => refLink(label, law))
-        .replace(/\\textsc\{([^}]*)\}/g, '<span class="smallcaps">$1</span>')
-        .replace(/\\(?:textmd|textsf)\{([^}]*)\}/g, "$1")
-        .replace(/\\texttt\{([^}]*)\}/g, "<code>$1</code>")
-        .replace(/\\(?:emph|textit)\{([^}]*)\}/g, "<em>$1</em>")
-        .replace(/\\textbf\{([^}]*)\}/g, "<strong>$1</strong>")
         .replace(/\s*\\begin\{(itemize|enumerate|description)\}\s*/g, (_, k) => `</p><${LIST[k]}>`)
         .replace(/\s*\\end\{(itemize|enumerate|description)\}\s*/g, (_, k) => `</${LIST[k]}><p>`)
         .replace(/\s*\\item\[([^\]]*)\]\s*/g, "<dt>$1</dt><dd>")
@@ -330,6 +359,64 @@ export function latexToHtml(tex, law) {
       return block.replace(/<p>\s*<\/p>/g, "");
     })
     .join("\n");
+}
+
+/**
+ * Inline LaTeX of a paragraph or a table cell: escaping, typographic
+ * apostrophes and dashes (as in the PDF), math, references, emphasis.
+ */
+function inlineLatex(tex, law) {
+  return escapeHtml(tex)
+    .replace(/^([IVX]+)\. ---\s*/, '<span class="para">$1. —</span> ')
+    .replace(/\\\[([\s\S]*?)\\\]/g, (_, m) => `<code class="math-tex">${m.trim()}</code>`)
+    .replace(/\$([^$]+)\$/g, (_, m) => `<var>${m.replace(/\\/g, "")}</var>`)
+    .replace(/'/g, "’")
+    .replace(/---/g, "—")
+    .replace(/--/g, "–")
+    .replace(/~/g, "&nbsp;")
+    .replace(/\\%/g, "%")
+    .replace(/\\ref\{([^}]+)\}/g, (_, label) => refLink(label, law))
+    .replace(/\\textsc\{([^}]*)\}/g, '<span class="smallcaps">$1</span>')
+    .replace(/\\(?:textmd|textsf)\{([^}]*)\}/g, "$1")
+    .replace(/\\texttt\{([^}]*)\}/g, "<code>$1</code>")
+    .replace(/\\(?:emph|textit)\{([^}]*)\}/g, "<em>$1</em>")
+    .replace(/\\textbf\{([^}]*)\}/g, "<strong>$1</strong>");
+}
+
+/**
+ * A `center` + `tabular` block of the text (indicative values, the table of
+ * numeric provisions). A leading `\multicolumn` row is the caption; the
+ * first row after it is the header; the first column labels each row.
+ */
+function renderTable(block, law) {
+  const body = block.match(/\\begin\{tabular\}\{[^}]*\}([\s\S]*?)\\end\{tabular\}/)?.[1];
+  if (!body) return "";
+  const rows = body
+    .replace(/\\hline/g, "")
+    .split(/\\\\(?:\[[^\]]*\])?/)
+    .map((r) => r.trim())
+    .filter(Boolean)
+    .map((r) => r.split(/(?<!\\)&/).map((c) => c.trim()));
+  let caption = "";
+  const first = rows[0]?.[0].match(/^\\multicolumn\{\d+\}\{\w+\}\{([\s\S]*)\}$/);
+  if (first && rows[0].length === 1) {
+    caption = inlineLatex(first[1], law);
+    rows.shift();
+  }
+  const [head, ...rest] = rows;
+  const cell = (c) => (c === "---" ? "—" : inlineLatex(c, law));
+  return `<div class="table-wrap law-table-wrap"><table class="values law-table">
+${caption ? `<caption>${caption}</caption>` : ""}
+<thead><tr>${head.map((c) => `<th scope="col">${cell(c)}</th>`).join("")}</tr></thead>
+<tbody>${rest
+    .map((r) => `<tr>${r.map((c, i) => (i === 0 ? `<th scope="row">${cell(c)}</th>` : `<td>${cell(c)}</td>`)).join("")}</tr>`)
+    .join("\n")}</tbody>
+</table></div>`;
+}
+
+/** The tables of an article's LaTeX, for an annotated copy (which has none). */
+export function latexTables(tex, law) {
+  return [...tex.matchAll(/\\begin\{center\}[\s\S]*?\\end\{center\}/g)].map((m) => renderTable(m[0], law)).join("\n");
 }
 
 /** Fingerprint of an article's LaTeX, whitespace-insensitive. */
@@ -366,7 +453,7 @@ function promiseText(name, law) {
 /** "T-PLAFOND : l'indemnité…" → tag + capitalised sentence, `code` kept. */
 function splitSummary(summary) {
   const m = summary.match(/^\**(T-[A-Z]+)\**\s*[.:]\s*([\s\S]*)$/);
-  const raw = (m ? m[2] : summary).replace(/\*\*/g, "").trim();
+  const raw = (m ? m[2] : summary).replace(/\*\*/g, "").replace(/'/g, "’").trim();
   const text = escapeHtml(raw.charAt(0).toUpperCase() + raw.slice(1)).replace(/`([^`]+)`/g, "<code>$1</code>");
   return { tag: m ? m[1] : null, text };
 }

@@ -1,30 +1,36 @@
-// Interactivity for the pre-rendered articles of /code/.
+// Interactivity for the pre-rendered pages: linked phrases, Lean
+// dropdowns, live thresholds and the promise checks.
 
 import { params, PARAM_SPECS, DERIVED } from "./lib/params.js";
 import { checkPromise } from "./lib/promises.js";
 
 export function initReader() {
-  for (const faces of document.querySelectorAll(".faces")) initFaceSwitch(faces);
+  initDropdownToggle();
   for (const article of document.querySelectorAll(".law-article[data-links]")) initLinks(article);
   initParamEditor();
   params.addEventListener("change", renderParams);
   renderParams();
 }
 
-/* Two faces --------------------------------------------------------------- */
+/* Lean dropdowns ----------------------------------------------------------- */
 
-// Side by side when there is room (CSS container query); otherwise one face
-// at a time, picked with these buttons.
-function initFaceSwitch(faces) {
-  faces.dataset.active = "law";
-  faces.addEventListener("click", (e) => {
-    const button = e.target.closest(".face-switch button");
-    if (!button) return;
-    faces.dataset.active = button.dataset.face;
-    for (const b of faces.querySelectorAll(".face-switch button")) {
-      b.setAttribute("aria-pressed", String(b === button));
-    }
+// "Show every formalisation" on the full text: opens or closes them all.
+function initDropdownToggle() {
+  const button = document.querySelector("[data-toggle-lean]");
+  if (!button) return;
+  const dropdowns = () => document.querySelectorAll("details.lean-dropdown:not(.lean-statement)");
+  const sync = () => {
+    const allOpen = [...dropdowns()].every((d) => d.open);
+    button.setAttribute("aria-pressed", String(allOpen));
+    button.textContent = allOpen ? "Replier toutes les formalisations" : "Déplier toutes les formalisations";
+  };
+  button.addEventListener("click", () => {
+    const open = button.getAttribute("aria-pressed") !== "true";
+    for (const d of dropdowns()) d.open = open;
+    sync();
   });
+  document.addEventListener("toggle", sync, true);
+  sync();
 }
 
 /* Linked phrases (CSS Custom Highlight API) ------------------------------ */
@@ -55,6 +61,8 @@ function initLinks(article) {
     for (const el of article.querySelectorAll(".face-law [data-link]")) {
       el.classList.toggle("is-linked", el.dataset.link === key);
     }
+    // The counterpart sits in the closed dropdown: point at it.
+    lean.classList.toggle("is-hinted", Boolean(key) && !lean.open);
     if (!supportsHighlights) return;
     if (key && ranges.get(key)?.length) CSS.highlights.set(HIGHLIGHT, new Highlight(...ranges.get(key)));
     else CSS.highlights.delete(HIGHLIGHT);
