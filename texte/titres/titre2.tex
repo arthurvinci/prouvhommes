@@ -1,7 +1,5 @@
 \section{Titre II --- La fin du contrat}
 
-% À rédiger (phase 6) : congé abusif.
-
 \article[absolue]{Causes de fin}\label{art:causes}
 Le contrat ne prend fin que par une rupture pendant la période d'essai, une
 résiliation ordinaire, une résiliation immédiate pour juste motif, un accord
@@ -23,6 +21,15 @@ la partie entière de douze fois le nombre de jours, divisé par trois cent
 soixante-cinq.
 \lean{anneesRevolues}
 \lean{moisRevolus}
+
+\article[relative]{Rupture pendant l'essai}\label{art:rupture-essai}
+Pendant la période d'essai, chaque partie peut mettre fin au contrat à tout
+moment, sans motif, avec un préavis de sept jours. Le préavis court même s'il
+se termine après la fin de la période d'essai.
+\lean{preavisEssai}
+\lean{dispPreavisEssaiEmployeur}
+\lean{dispPreavisEssaiSalarie}
+\theoreme{fin_ruptureEssai}
 
 \article[relative]{Résiliation ordinaire}\label{art:resiliation}
 I. --- Après la période d'essai, chaque partie peut résilier le contrat à tout
@@ -46,11 +53,59 @@ l'employeur et raccourcir celui dû par le salarié
 \theoreme{duree_minimale}
 \theoreme{preavis_ordinaire_apres_essai}
 
-\article[relative]{Motivation sur demande}
+\article[relative]{Périodes de protection}\label{art:protection}
+I. --- Après la période d'essai, pendant une incapacité de travail du salarié
+ou son congé de maternité :
+\begin{itemize}
+  \item la résiliation ordinaire notifiée par l'employeur est nulle ;
+  \item le préavis d'une résiliation ordinaire de l'employeur déjà notifiée
+        est suspendu, et reprend à la fin de la période de protection.
+\end{itemize}
+
+II. --- La protection ne fait obstacle ni à la démission du salarié, ni à
+une résiliation immédiate pour juste motif.
+\lean{suspendu}
+\theoreme{protection_nullite}
+\theoreme{protection_suspend}
+\theoreme{protection_salarie_libre}
+
+% À rédiger (phase 6) : congé abusif.
+
+\article[absolue]{Résiliation immédiate pour juste motif}\label{art:resiliation-immediate}
+Chaque partie peut résilier le contrat sans préavis pour juste motif. Le
+contrat prend fin le jour de la réception de la résiliation. Le juste motif
+est une notion ouverte, appréciée par le juge.
+\lean{Interpretation.justeMotif}
+\theoreme{fin_resiliationImmediate}
+
+\article{Accord écrit et décès}\label{art:accord-deces}
+I. --- Les parties peuvent mettre fin au contrat d'un commun accord, par écrit,
+sans préavis.
+
+II. --- Le contrat prend fin de plein droit au décès du salarié.
+\lean{CauseFin.accordCommun}
+\lean{CauseFin.deces}
+
+\article[relative]{Motivation sur demande}\label{art:motivation}
 La partie qui résilie le contrat en indique le motif par écrit si l'autre
 partie le demande. L'absence de motivation n'affecte pas la validité de la
 résiliation.
 \horsformalisation{obligation d'information, sans effet sur la machine à états}
+
+\article{Salaire de référence}\label{art:salaire-reference}
+I. --- Le salaire mensuel est la rémunération brute totale versée au titre
+d'un mois, primes et heures supplémentaires comprises. Un mois sans salaire
+n'est pas pris en compte.
+
+II. --- Sont pris en compte les soixante derniers mois pour lesquels un salaire
+a été versé ou, si le contrat en compte moins, tous ces mois.
+
+III. --- Les mois pris en compte sont parcourus du plus ancien au plus récent.
+Le salaire de référence est d'abord égal au salaire du premier mois. À chaque
+mois suivant, il devient la somme d'un vingt-quatrième du salaire de ce mois et
+des vingt-trois vingt-quatrièmes du salaire de référence précédent.
+\lean{salaireReference}
+\theoreme{salaireReference_sensibilite}
 
 \article[relative]{Indemnité de rupture}\label{art:indemnite}
 I. --- En cas de résiliation ordinaire du contrat par l'employeur, le
@@ -87,49 +142,3 @@ ni en cas d'accord écrit des parties ou de décès du salarié.
   \hline
 \end{tabular}
 \end{center}
-
-\article{Salaire de référence}\label{art:salaire-reference}
-I. --- Le salaire mensuel est la rémunération brute totale versée au titre
-d'un mois, primes et heures supplémentaires comprises. Un mois sans salaire
-n'est pas pris en compte.
-
-II. --- Sont pris en compte les soixante derniers mois pour lesquels un salaire
-a été versé ou, si le contrat en compte moins, tous ces mois.
-
-III. --- Les mois pris en compte sont parcourus du plus ancien au plus récent.
-Le salaire de référence est d'abord égal au salaire du premier mois. À chaque
-mois suivant, il devient la somme d'un vingt-quatrième du salaire de ce mois et
-des vingt-trois vingt-quatrièmes du salaire de référence précédent.
-\lean{salaireReference}
-\theoreme{salaireReference_sensibilite}
-
-\article[relative]{Périodes de protection}
-I. --- Après la période d'essai, pendant une incapacité de travail du salarié
-ou son congé de maternité :
-\begin{itemize}
-  \item la résiliation ordinaire notifiée par l'employeur est nulle ;
-  \item le préavis d'une résiliation ordinaire de l'employeur déjà notifiée
-        est suspendu, et reprend à la fin de la période de protection.
-\end{itemize}
-
-II. --- La protection ne fait obstacle ni à la démission du salarié, ni à
-une résiliation immédiate pour juste motif.
-\lean{suspendu}
-\theoreme{protection_nullite}
-\theoreme{protection_suspend}
-\theoreme{protection_salarie_libre}
-
-\article[absolue]{Résiliation immédiate pour juste motif}
-Chaque partie peut résilier le contrat sans préavis pour juste motif. Le
-contrat prend fin le jour de la réception de la résiliation. Le juste motif
-est une notion ouverte, appréciée par le juge.
-\lean{Interpretation.justeMotif}
-\theoreme{fin_resiliationImmediate}
-
-\article{Accord écrit et décès}
-I. --- Les parties peuvent mettre fin au contrat d'un commun accord, par écrit,
-sans préavis.
-
-II. --- Le contrat prend fin de plein droit au décès du salarié.
-\lean{CauseFin.accordCommun}
-\lean{CauseFin.deces}
