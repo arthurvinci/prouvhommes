@@ -39,9 +39,86 @@
 \maketitle
 \tableofcontents
 
-\section*{Préambule}
-Ce code tient en une cinquantaine d'articles. Chaque article a une
-contrepartie formelle dans le dossier \texttt{lean/} du dépôt.
+\section*{Introduction}
+\addcontentsline{toc}{section}{Introduction}
+
+Cette introduction n'a pas de valeur normative. Elle explique la démarche
+suivie et la manière de lire les articles.
+
+\subsection*{Objet}
+Ce texte propose un code du travail complet en une cinquantaine d'articles.
+Il fixe les règles du contrat de travail : sa forme, sa fin, le temps de
+travail, les congés et le salaire. Il s'inspire du code des obligations
+suisse, qui règle le contrat de travail en quelques dizaines d'articles.
+
+Cette brièveté a une contrepartie, que le code assume. Beaucoup de questions
+sont laissées au contrat de travail et aux accords d'entreprise. D'autres
+relèvent de textes distincts et ne figurent pas ici : la représentation du
+personnel, la formation professionnelle, l'assurance chômage, la procédure
+devant le juge, les licenciements collectifs et les régimes spéciaux.
+
+\subsection*{Démarche}
+Le code est écrit pour être traduit en langage mathématique. Sauf exception
+signalée, chaque article a une contrepartie dans l'assistant de preuve
+Lean~4 : les règles y deviennent
+des définitions, et les propriétés attendues du texte y deviennent des
+théorèmes. La machine vérifie chaque démonstration. Elle établit par exemple
+que l'indemnité de rupture ne dépasse jamais six mois de salaire de
+référence, quelle que soit la situation du salarié.
+
+Pour que cette traduction soit possible, le texte suit quelques règles
+d'écriture.
+\begin{itemize}
+  \item \emph{Seuils chiffrés.} Tout seuil est un nombre de jours, d'heures,
+    de mois ou d'euros. Le code n'emploie jamais de formule comme
+    « délai raisonnable ».
+  \item \emph{Notions ouvertes déclarées.} Certaines notions demandent
+    l'appréciation du juge, comme le \emph{juste motif}. Elles sont peu
+    nombreuses et signalées comme telles. Le code ne les définit pas, et les
+    théorèmes restent vrais quelle que soit l'interprétation que le juge en
+    retient.
+  \item \emph{Règle générale, puis exceptions.} Un article pose d'abord la
+    règle, puis énumère limitativement les cas où elle ne s'applique pas.
+  \item \emph{Calcul exact.} Les montants se calculent sans aucun arrondi
+    intermédiaire. Un seul arrondi intervient, à la fin, au centime d'euro
+    inférieur.
+\end{itemize}
+
+\subsection*{Lire un article}
+Chaque article porte un numéro et un titre. La plupart portent aussi, en
+petites capitales à droite du titre, leur \emph{niveau d'impérativité}. Ce
+niveau dit si le contrat de travail ou un accord collectif peut s'écarter de
+la règle, et dans quel sens. Il en existe trois.
+\begin{description}
+  \item[\textmd{\textsc{absolue}}] Aucune dérogation n'est possible, même plus
+    favorable au salarié. Toute clause contraire est réputée non écrite.
+    C'est le cas de l'article « Forme unique » : un contrat ne peut pas
+    fixer de terme, même si le salarié le souhaite.
+  \item[\textmd{\textsc{relative}}] On peut y déroger, mais seulement en faveur du
+    salarié. La règle fixe un minimum garanti. C'est le cas de l'indemnité
+    de rupture (article~\ref{art:indemnite}) : le contrat peut prévoir une
+    indemnité plus élevée, jamais une indemnité plus faible.
+  \item[\textmd{\textsc{dispositive}}] La règle s'applique quand les parties n'ont
+    rien prévu d'autre. Le contrat ou l'accord d'entreprise peut l'écarter
+    librement, dans un sens comme dans l'autre.
+\end{description}
+Un article sans niveau ne prescrit rien : il définit une notion employée
+ailleurs, comme le salaire de référence
+(article~\ref{art:salaire-reference}).
+
+Sous le texte d'un article, des renvois en petits caractères indiquent sa
+contrepartie formelle. Les noms qui y figurent sont ceux des fichiers du
+dossier \texttt{lean/} du dépôt.
+\begin{description}
+  \item[\textsf{Lean :}] la définition qui traduit l'article.
+  \item[\textsf{Théorème :}] une propriété de l'article, démontrée et vérifiée
+    par la machine. Un nom cité ici désigne toujours un théorème entièrement
+    démontré.
+  \item[\textsf{Hors formalisation :}] l'article n'est volontairement pas
+    traduit, pour la raison indiquée.
+\end{description}
+Les tableaux de valeurs indicatives illustrent un calcul. Ils n'ont pas de
+valeur normative : en cas d'écart, la formule de l'article prévaut.
 
 \input{titres/titre1}
 \input{titres/titre2}
