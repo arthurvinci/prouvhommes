@@ -55,7 +55,17 @@ Il faut Node 20 ou plus récent :
 cd site && npm install && npm run dev
 ```
 
-Chaque PR qui touche `site/` reçoit un aperçu Vercel ; `main` est le site en production.
+Chaque PR qui touche `site/` reçoit un aperçu Vercel ; `main` est le site en production. Les tests (`npm test`) lisent le vrai texte et la vraie formalisation : ils vérifient notamment que le niveau d'impérativité de chaque article est celui de la disposition Lean qu'il cite.
+
+## Vérifications
+
+Toute modification passe par une PR, que le propriétaire du dépôt doit approuver (`.github/CODEOWNERS`) ; l'administrateur du dépôt peut passer outre lors de la fusion. La CI lance, selon les fichiers touchés :
+
+| Job | Vérifie |
+|---|---|
+| Texte (LaTeX) | Le texte compile ; le PDF versionné est issu des sources actuelles (`scripts/check-pdf.sh`). |
+| Formalisation (Lean) | Aucun `sorry` ; tout compile, y compris les `#print axioms` de `Vitrine.lean` ; chaque nom cité par `\lean{}` existe et chaque `\theoreme{}` est démontré sans axiome non standard (`scripts/check-renvois.sh`). |
+| Site (tests et build) | Les tests du site, puis son build. |
 
 ## Méthode
 

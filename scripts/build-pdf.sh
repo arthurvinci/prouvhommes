@@ -8,6 +8,9 @@
 # jour, du dernier commit qui touche texte/, ou d'aujourd'hui si texte/ a des
 # modifications en cours.
 #
+# Le PDF porte dans ses métadonnées l'empreinte des sources dont il est issu
+# (scripts/texte-fingerprint.sh) : la CI vérifie ainsi qu'il est à jour.
+#
 # Les commandes git tournent depuis la racine : dans un hook, git définit
 # GIT_DIR et prendrait le répertoire courant pour la racine du dépôt.
 set -euo pipefail
@@ -31,8 +34,11 @@ fi
 export SOURCE_DATE_EPOCH=$(( epoch - epoch % 86400 ))
 export FORCE_SOURCE_DATE=1
 
+empreinte="$(./scripts/texte-fingerprint.sh)"
+
 mkdir -p texte/build
 if ! (cd texte && latexmk -g -pdf -interaction=nonstopmode -halt-on-error \
+    -usepretex="\\def\\empreinte{$empreinte}" \
     -outdir=build main.tex >build/build-pdf.log 2>&1); then
   echo "build-pdf : échec de la compilation LaTeX. Fin du journal :" >&2
   tail -20 texte/build/build-pdf.log >&2

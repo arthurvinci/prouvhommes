@@ -35,10 +35,16 @@ jobs:
             texte:
               - *workflow
               - 'texte/**'
+              - 'scripts/build-pdf.sh'
+              - 'scripts/check-pdf.sh'
+              - 'scripts/texte-fingerprint.sh'
+            # The text's \lean{} and \theoreme{} citations are checked by Lean.
             lean:
               - *workflow
               - 'lean/**'
+              - 'texte/**'
               - 'scripts/check-sorry.sh'
+              - 'scripts/check-renvois.sh'
             # The site reads texte/ and lean/ at build time, and its tests
             # check that every Lean name cited by the text exists.
             site:
@@ -54,6 +60,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # The committed PDF carries the fingerprint of the sources it was built
+      # from: catches a commit without the hook, or a merge made on GitHub.
+      - name: PDF versionné à jour
+        run: ./scripts/check-pdf.sh
       - uses: xu-cheng/latex-action@v3
         with:
           root_file: main.tex
@@ -78,6 +88,10 @@ jobs:
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: lean
+      # Every name the text cites exists; every cited theorem is proved
+      # without sorry or non-standard axioms.
+      - name: Renvois du texte vers Lean
+        run: ./scripts/check-renvois.sh
 
   # Vercel deploys the site; this job runs its tests, which Vercel does not.
   site:
