@@ -39,7 +39,7 @@ export function layout({ title, description, tab, body, current = false }) {
   <body>
     <a class="skip-link" href="#contenu">Aller au contenu</a>
     <header class="site-header">
-      <a class="brand" href="/"${tab ? "" : ' aria-current="page"'}>Prouv'hommes</a>
+      <a class="brand" href="/"${tab ? "" : ' aria-current="page"'}>Prouv’hommes</a>
       <nav class="tabs" aria-label="Rubriques">
         ${nav}
       </nav>
@@ -63,7 +63,7 @@ ${body}
 
     <footer class="site-footer">
       <p>
-        Prouv'hommes, une proposition de code du travail formalisée en Lean.
+        Prouv’hommes, une proposition de code du travail formalisée en Lean.
         <a href="${REPO}">Sources</a> ·
         <a href="${REPO}/raw/main/texte/prouvhommes.pdf">Texte en PDF</a>
       </p>

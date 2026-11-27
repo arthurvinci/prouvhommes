@@ -8,9 +8,9 @@ import { toNumber, q } from "../lib/rational.js";
 import { decimal, euros, fraction, parseEuros, seniority } from "../lib/format.js";
 
 const CAUSES = [
-  ["ordinaryTermination:employer", "Licenciement (résiliation ordinaire par l'employeur)"],
+  ["ordinaryTermination:employer", "Licenciement (résiliation ordinaire par l’employeur)"],
   ["ordinaryTermination:employee", "Démission"],
-  ["trialTermination:employer", "Rupture pendant la période d'essai"],
+  ["trialTermination:employer", "Rupture pendant la période d’essai"],
   ["immediateTermination:employer", "Résiliation immédiate pour juste motif"],
   ["mutualAgreement:", "Accord écrit des parties"],
   ["death:", "Décès du salarié"],
@@ -20,9 +20,9 @@ const CAUSES = [
 // owes nothing (shown instead of an all-zero chart).
 const NOT_DUE_NOTES = {
   mutualAgreement:
-    "Ce code ne prévoit pas d'indemnité en cas d'accord. En droit actuel, la rupture conventionnelle ouvre droit à une indemnité au moins égale à l'indemnité légale de licenciement (article L1237-13 du code du travail) ; le droit suisse n'en prévoit pas.",
+    "Ce code ne prévoit pas d’indemnité en cas d’accord. En droit actuel, la rupture conventionnelle ouvre droit à une indemnité au moins égale à l’indemnité légale de licenciement (article L1237-13 du code du travail) ; le droit suisse n’en prévoit pas.",
   default:
-    "Rien à comparer : dans ce cas, le droit actuel et le droit suisse ne prévoient pas non plus d'indemnité légale, quelle que soit l'ancienneté.",
+    "Rien à comparer : dans ce cas, le droit actuel et le droit suisse ne prévoient pas non plus d’indemnité légale, quelle que soit l’ancienneté.",
 };
 
 const SERIES = [
@@ -68,9 +68,9 @@ ${
   compact
     ? `<p class="more"><a href="${fullUrl}">Voir la courbe et la comparaison avec le droit actuel et la Suisse</a></p>`
     : `<figure class="chart" data-due-only>
-  <figcaption>Indemnité selon l'ancienneté, en mois de salaire</figcaption>
+  <figcaption>Indemnité selon l’ancienneté, en mois de salaire</figcaption>
   <ul class="legend">${SERIES.map((s) => `<li data-series="${s.key}"><span class="swatch" aria-hidden="true"></span>${s.label}</li>`).join("")}</ul>
-  <div class="chart-plot"><svg data-chart role="img" aria-label="Courbes de l'indemnité selon l'ancienneté : ce code, le droit actuel et la Suisse. Valeurs dans le tableau ci-dessous."></svg><div class="chart-tooltip" data-tooltip hidden></div></div>
+  <div class="chart-plot"><svg data-chart role="img" aria-label="Courbes de l’indemnité selon l’ancienneté : ce code, le droit actuel et la Suisse. Valeurs dans le tableau ci-dessous."></svg><div class="chart-tooltip" data-tooltip hidden></div></div>
 </figure>
 <div class="table-wrap" data-due-only>
   <table class="values">
@@ -79,7 +79,7 @@ ${
     <tbody data-out="table"></tbody>
   </table>
 </div>
-<p class="note">Le simulateur suppose un salaire constant : le salaire de référence est alors égal au salaire. Pour un salaire qui varie, voir le simulateur <a href="/simulateurs/anti-manipulation/">anti-manipulation</a>. Droit actuel : articles L1234-9 et R1234-2 du code du travail (1/4 de mois par année jusqu'à 10 ans, 1/3 au-delà, dès 8 mois d'ancienneté). Suisse : pas d'indemnité légale de licenciement, sauf cas particulier des salariés de 50 ans et plus.</p>`
+<p class="note">Le simulateur suppose un salaire constant : le salaire de référence est alors égal au salaire. Pour un salaire qui varie, voir le simulateur <a href="/simulateurs/anti-manipulation/">anti-manipulation</a>. Droit actuel : articles L1234-9 et R1234-2 du code du travail (1/4 de mois par année jusqu’à 10 ans, 1/3 au-delà, dès 8 mois d’ancienneté). Suisse : pas d’indemnité légale de licenciement, sauf cas particulier des salariés de 50 ans et plus.</p>`
 }`;
 
   const $ = (sel) => root.querySelector(sel);
@@ -108,7 +108,7 @@ ${
     $('[data-out="detail"]').innerHTML =
       due
         ? `${decimal(coef)} mois de salaire de référence${coef.d === 1n ? "" : ` (exactement ${fraction(coef)})`}. Calcul : ⌊ ${euros(salary)} × ${fraction(coef)} ⌋, arrondi une seule fois, au centime inférieur.`
-        : "Pas d'indemnité : elle n'est due qu'en cas de licenciement ordinaire (III).";
+        : "Pas d’indemnité : elle n’est due qu’en cas de licenciement ordinaire (III).";
 
     // Nothing to plot when no severance is due: every curve would be 0.
     for (const el of root.querySelectorAll("[data-due-only]")) el.hidden = !due;

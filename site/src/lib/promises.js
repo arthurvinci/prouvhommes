@@ -17,6 +17,9 @@ const repeat = (n, cents) => Array.from({ length: n }, () => cents);
  * @returns {{ state: "unaffected" | "checked" | "broken", text: string } | null}
  *   null when the theorem has no live check.
  */
+/** Theorems that have a live check (tested against the Lean sources). */
+export const checkedTheorems = () => Object.keys(CHECKS);
+
 export function checkPromise(name, p) {
   const check = CHECKS[name];
   return check ? check(p) : null;
@@ -31,7 +34,7 @@ const CHECKS = {
     if (pay > bound) {
       return {
         state: "broken",
-        text: `Rompue. Contre-exemple : après ${seniority(m)} à 3 000 € par mois, l'indemnité est de ${euros(pay)}, au-delà de 6 mois de salaire (${euros(bound)}).`,
+        text: `Rompue. Contre-exemple : après ${seniority(m)} à 3 000 € par mois, l’indemnité est de ${euros(pay)}, au-delà de 6 mois de salaire (${euros(bound)}).`,
       };
     }
     const cap = p.capMonths.n;
@@ -39,8 +42,8 @@ const CHECKS = {
       state: "checked",
       text:
         cap === 6n
-          ? "Tenue : le plafond reste de 6 mois, seul le rythme pour l'atteindre change."
-          : `Tenue : avec un plafond de ${cap} mois, l'indemnité ne dépasse jamais ${cap} mois de salaire, donc pas 6.`,
+          ? "Tenue : le plafond reste de 6 mois, seul le rythme pour l’atteindre change."
+          : `Tenue : avec un plafond de ${cap} mois, l’indemnité ne dépasse jamais ${cap} mois de salaire, donc pas 6.`,
     };
   },
 
@@ -64,7 +67,7 @@ const CHECKS = {
       if (4n * loss >= delta + 4n) {
         return {
           state: "broken",
-          text: `Rompue. Contre-exemple : à ${seniority(m)}, baisser le dernier salaire de ${euros(delta)} fait perdre ${euros(loss)} d'indemnité, plus que la borne Δ/4 + 0,01 € (${euros(delta / 4n + 1n)}).`,
+          text: `Rompue. Contre-exemple : à ${seniority(m)}, baisser le dernier salaire de ${euros(delta)} fait perdre ${euros(loss)} d’indemnité, plus que la borne Δ/4 + 0,01 € (${euros(delta / 4n + 1n)}).`,
         };
       }
       delta *= 10n;
@@ -88,12 +91,12 @@ const CHECKS = {
   // Agreements and contracts can only raise the severance (P15).
   indemnite_ge_legal: () => ({
     state: "unaffected",
-    text: "Ne dépend d'aucun seuil : un accord ou le contrat ne peut que relever l'indemnité.",
+    text: "Ne dépend d’aucun seuil : un accord ou le contrat ne peut que relever l’indemnité.",
   }),
 
   indemniteRupture_eq_zero: () => ({
     state: "unaffected",
-    text: "Ne dépend d'aucun seuil : elle reste prouvée.",
+    text: "Ne dépend d’aucun seuil : elle reste prouvée.",
   }),
 
   // Monotone in seniority: checked month by month over 50 years.
@@ -106,6 +109,6 @@ const CHECKS = {
       }
       prev = pay;
     }
-    return { state: "checked", text: "Vérifiée par le calcul, mois par mois, de 0 à 50 ans d'ancienneté." };
+    return { state: "checked", text: "Vérifiée par le calcul, mois par mois, de 0 à 50 ans d’ancienneté." };
   },
 };

@@ -16,7 +16,7 @@ export const SIMULATORS = [
     slug: "anti-manipulation",
     extra: "manipulation-demo",
     title: "Anti-manipulation",
-    question: "Peut-on gonfler ou dégonfler l'indemnité ?",
+    question: "Peut-on gonfler ou dégonfler l’indemnité ?",
     lede: "Ce que change une baisse du dernier salaire, ou une forte prime, juste avant la rupture.",
     article: "art:salaire-reference",
     params: ["alpha", "windowSize"],

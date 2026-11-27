@@ -289,35 +289,9 @@ h1.article-title { font-size: clamp(1.9rem, 1.4rem + 1.5vw, 2.5rem); }
 .level[data-level="relative"] .level-mark { background: linear-gradient(to top, var(--ink) 50%, transparent 50%); }
 .level[data-level="dispositive"] .level-mark { border-style: dashed; }
 
-/* Two faces: side by side when there is room, one at a time otherwise. */
+/* The text of an article, then its Lean formalisation in a dropdown. */
 .law-article { container-type: inline-size; }
-.faces { margin-top: 1.75rem; }
-.face-switch {
-  display: none;
-  margin-bottom: 1rem;
-  font-family: var(--font-sans);
-  font-size: 0.875rem;
-}
-.face-switch button {
-  border: 1px solid var(--rule);
-  background: transparent;
-  padding: 0.3rem 0.9rem;
-  cursor: pointer;
-}
-.face-switch button:first-child { border-radius: var(--radius) 0 0 var(--radius); }
-.face-switch button:last-child { border-radius: 0 var(--radius) var(--radius) 0; border-inline-start: 0; }
-.face-switch button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-
-.faces > .face { min-width: 0; }
-@container (width >= 46rem) {
-  .faces { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 2rem; }
-}
-@container (width < 46rem) {
-  .face-switch { display: flex; }
-  .faces[data-active="law"] > .face-lean,
-  .faces[data-active="lean"] > .face-law { display: none; }
-}
-
+.face-law { margin-top: 1.75rem; }
 .face-law p { margin: 0 0 1rem; max-width: var(--measure); text-wrap: pretty; }
 .para { font-family: var(--font-sans); font-size: 0.875rem; font-weight: 500; color: var(--ink-soft); }
 
@@ -385,7 +359,94 @@ h1.article-title { font-size: clamp(1.9rem, 1.4rem + 1.5vw, 2.5rem); }
 .math-block { overflow-x: auto; }
 .math-tex { font-size: 0.9rem; }
 
-.face-lean { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem; align-content: start; }
+/* Lean dropdowns (native <details>, so find-in-page reaches their content). */
+.lean-dropdown {
+  max-width: var(--measure);
+  margin: 0.5rem 0 0;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--paper-raised);
+}
+.law-article > .lean-dropdown { max-width: none; }
+.lean-dropdown > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  padding: 0.6rem 0.9rem;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  border-radius: 8px;
+}
+.lean-dropdown > summary::-webkit-details-marker { display: none; }
+.lean-dropdown > summary::before {
+  content: "›" / "";
+  display: inline-block;
+  width: 0.75rem;
+  color: var(--accent);
+  font-weight: 500;
+  transition: rotate 0.2s;
+}
+.lean-dropdown[open] > summary::before { rotate: 90deg; }
+.lean-dropdown > summary:hover { background: color-mix(in oklab, var(--paper-raised), var(--ink) 4%); }
+.lean-dropdown-label { font-weight: 500; }
+.lean-dropdown-meta { color: var(--ink-soft); font-family: var(--font-mono); font-size: 0.75rem; }
+.lean-dropdown-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.25rem 0.9rem 0.9rem;
+}
+/* Hovering a linked phrase while the dropdown is closed points at it. */
+.lean-dropdown.is-hinted > summary { box-shadow: inset 0 0 0 1px var(--accent); }
+.lean-statement { margin-top: 0.5rem; background: transparent; }
+.lean-statement > summary { padding: 0.35rem 0.7rem; font-size: 0.8125rem; }
+.lean-statement pre {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: var(--code-bg);
+  border-radius: var(--radius);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.lean-proof-link { margin: 0; font-family: var(--font-sans); font-size: 0.8125rem; }
+.lean-none { margin: 0.5rem 0 0; font-family: var(--font-sans); font-size: 0.875rem; color: var(--ink-soft); font-style: italic; }
+.lean-dropdown-sample {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.lean-dropdown-sample::before { content: "› " / ""; color: var(--accent); }
+@supports selector(::details-content) {
+  :root { interpolate-size: allow-keywords; }
+  .lean-dropdown::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition: block-size 0.25s, content-visibility 0.25s allow-discrete;
+  }
+  .lean-dropdown[open]::details-content { block-size: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lean-dropdown::details-content, .lean-dropdown > summary::before { transition: none; }
+}
+.button {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+}
+.button:hover { border-color: var(--ink-soft); }
 .lean-decl { margin: 0; }
 .lean-decl figcaption { font-family: var(--font-mono); font-size: 0.75rem; margin-bottom: 0.25rem; }
 .lean-decl figcaption a { color: var(--ink-soft); text-decoration: none; }
@@ -608,7 +669,7 @@ h1.article-title { font-size: clamp(1.9rem, 1.4rem + 1.5vw, 2.5rem); }
 .param-law { margin: 0.25rem 0 0; font-size: 0.8125rem; color: var(--ink-soft); }
 
 @media (prefers-reduced-motion: no-preference) {
-  .live-number, .face-switch button { transition: color 0.15s, background-color 0.15s; }
+  .live-number { transition: color 0.15s, background-color 0.15s; }
 }
 
 /* Pages ---------------------------------------------------------------------- */
