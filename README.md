@@ -1,0 +1,42 @@
+# Prouv'hommes
+
+> Un code du travail au régime, prouvé en Lean.
+
+**Prouv'hommes** propose un code du travail français radicalement simplifié (environ 50 pages, d'inspiration libérale) et le formalise mathématiquement pour prouver des propriétés sur lui. Par exemple :
+
+- l'indemnité de rupture ne dépasse jamais 6 mois de salaire de référence ;
+- baisser le dernier salaire avant un licenciement ne change presque rien à l'indemnité ;
+- aucune relation de travail ne se termine sans préavis ou juste motif.
+
+## Organisation du dépôt
+
+| Dossier | Contenu |
+|---|---|
+| `docs/` | La charte des principes et les décisions de conception |
+| `texte/` | Le texte du code, en LaTeX (un fichier par titre) |
+| `lean/` | La formalisation en Lean 4 + Mathlib : définitions et théorèmes |
+| `catala/` | La version exécutable en [Catala](https://catala-lang.org/), pour calculer des cas concrets |
+
+## Compiler
+
+**Le texte (PDF)**
+
+```sh
+cd texte && latexmk -pdf main.tex
+```
+
+**La formalisation Lean**
+
+Il faut [elan](https://github.com/leanprover/elan). Au premier lancement, le script aligne la version de Lean sur celle de Mathlib et télécharge le cache :
+
+```sh
+./scripts/bootstrap-lean.sh
+cd lean && lake build
+```
+
+**La version Catala** : à venir.
+
+## Méthode
+
+Chaque article du texte a sa contrepartie formelle. Les règles d'écriture (seuils chiffrés, notions ouvertes déclarées, règle générale puis exceptions, trois niveaux d'impérativité) sont décrites dans [`docs/charte.md`](docs/charte.md).
+

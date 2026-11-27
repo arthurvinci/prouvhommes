@@ -1,0 +1,30 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{hyperref}
+
+% Numérotation des articles
+\newcounter{article}
+\newcommand{\article}[1]{%
+  \refstepcounter{article}%
+  \par\medskip\noindent\textbf{Article \thearticle\ --- #1}\par\nopagebreak}
+
+\title{Prouv'hommes\\[0.3em]\large Proposition de code du travail simplifié}
+\author{}
+\date{Version de travail --- \today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\section*{Préambule}
+Ce code tient en une cinquantaine d'articles. Chaque article a une
+contrepartie formelle dans le dossier \texttt{lean/} du dépôt.
+
+\input{titres/titre1}
+
+\end{document}

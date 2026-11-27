@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+
+# LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+texte/build/
+
+# Lean
+lean/.lake/
+
+# Catala
+_build/

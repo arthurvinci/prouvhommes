@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  texte:
+    name: Texte (LaTeX)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: xu-cheng/latex-action@v3
+        with:
+          root_file: main.tex
+          working_directory: texte
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prouvhommes-pdf
+          path: texte/main.pdf
+
+  lean:
+    name: Formalisation (Lean)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Aligner la toolchain sur Mathlib
+        run: curl -fsSL https://raw.githubusercontent.com/leanprover-community/mathlib4/master/lean-toolchain -o lean/lean-toolchain
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: lean
