@@ -1,0 +1,52 @@
+\section{Titre II --- La fin du contrat}
+
+% À rédiger : préavis, motivation sur demande, congé abusif,
+% périodes de protection, résiliation immédiate pour juste motif.
+
+\article[relative]{Indemnité de rupture}\label{art:indemnite}
+I. --- En cas de résiliation ordinaire du contrat par l'employeur, le
+salarié a droit à une indemnité de rupture.
+
+II. --- Le montant de l'indemnité est
+\[
+  I = \left\lfloor SR \times 6 \times S\!\left(\frac{\min(m,\,240)}{240}\right) \right\rfloor
+  \qquad\text{avec}\qquad S(t) = 3t^2 - 2t^3,
+\]
+où $SR$ est le salaire de référence défini à l'article~\ref{art:salaire-reference}
+et $m$ l'ancienneté du salarié en mois révolus à la fin du contrat.
+Le montant est arrondi au centime d'euro inférieur. Aucun calcul intermédiaire
+n'est arrondi.
+
+III. --- L'indemnité n'est due ni en cas de démission, ni en cas de rupture
+pendant la période d'essai, ni en cas de résiliation immédiate pour juste motif.
+\lean{indemniteRupture}
+\theoreme{indemniteRupture_le_plafond}
+\theoreme{indemniteRupture_manipulation}
+\theoreme{indemniteRupture_eq_zero}
+\theoreme{indemnite_mono_anciennete}
+
+\begin{center}
+\footnotesize
+\begin{tabular}{lccccc}
+  \multicolumn{6}{c}{\textit{Valeurs indicatives, en mois de salaire de référence}} \\[0.3em]
+  \hline
+  Ancienneté & 1 an & 5 ans & 10 ans & 15 ans & 20 ans et plus \\
+  Indemnité & 0,04 & 0,94 & 3 & 5,06 & 6 \\
+  \hline
+\end{tabular}
+\end{center}
+
+\article{Salaire de référence}\label{art:salaire-reference}
+I. --- Le salaire mensuel est la rémunération brute totale versée au titre
+d'un mois, primes et heures supplémentaires comprises. Un mois sans salaire
+n'est pas pris en compte.
+
+II. --- Sont pris en compte les soixante derniers mois pour lesquels un salaire
+a été versé ou, si le contrat en compte moins, tous ces mois.
+
+III. --- Les mois pris en compte sont parcourus du plus ancien au plus récent.
+Le salaire de référence est d'abord égal au salaire du premier mois. À chaque
+mois suivant, il devient la somme d'un vingt-quatrième du salaire de ce mois et
+des vingt-trois vingt-quatrièmes du salaire de référence précédent.
+\lean{salaireReference}
+\theoreme{salaireReference_sensibilite}

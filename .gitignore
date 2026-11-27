@@ -21,3 +21,6 @@ _build/
 
 # Notes locales
 PLAN.md
+
+# Worktrees de Claude Code
+.claude/worktrees/
