@@ -29,7 +29,6 @@ describe("site ↔ Lean", () => {
     expect(eq(LAW_PARAMS.capMonths, leanValue("plafondMois"))).toBe(true);
     expect(eq(q(LAW_PARAMS.saturationMonths), leanValue("ancienneteSaturation"))).toBe(true);
     expect(eq(LAW_PARAMS.alpha, leanValue("alphaSR"))).toBe(true);
-    expect(eq(q(LAW_PARAMS.windowSize), leanValue("tailleFenetre"))).toBe(true);
   });
 
   test("every theorem with a live check exists in Lean", () => {

@@ -1,4 +1,4 @@
-# Charte des principes — Prouv'hommes (v0.8, brouillon)
+# Charte des principes — Prouv'hommes (v0.9, brouillon)
 
 > Objectif : un code du travail d'environ 50 pages, d'inspiration libérale, écrit dès le départ pour être formalisable en Lean 4.
 > Statut : document de travail. Les points marqués [À TRANCHER] restent à décider.
@@ -28,6 +28,9 @@
   - P13 : congés comptés en jours ouvrés : 20 jours par an, acquis à raison de 5/3 de jour par mois.
   - P11 : la période de référence ne dépasse pas 26 semaines (6 mois), ce que la directive 2003/88 (art. 19) permet à un accord collectif sans autre condition.
   - P9 bis : l'accord écrit et le décès sont des fins `absolue` ; un article sans niveau ne fait que définir une notion.
+  - M8 : pas d'effet de seuil. Toute durée ou tout montant varie de façon continue (en temps discret : par incréments bornés, prouvés en Lean).
+  - P3/P4 : un seul préavis, pendant l'essai comme après, fonction continue de l'ancienneté : 7 j au jour 0, 30 j à 30 jours, 60 j à 1 an, 90 j à 9 ans, affine entre ces points. Remplace les paliers 7 / 30 / 60 / 90 jours.
+  - P6 : le salaire de référence est une moyenne pondérée des salaires ramenés à temps plein, pondérée par le taux d'activité de chaque mois, sur tout le contrat. Plus de fenêtre de 60 mois, plus de mois exclus.
 
 ---
 
@@ -58,6 +61,7 @@
 - **M5. Temps discret, calcul exact.** Jour, heure, et mois pour l'ancienneté. Calculs intermédiaires en rationnels exacts (`ℚ`), un seul arrondi final au centime inférieur. Jamais de flottants.
 - **M6. Procédures = machines à états finies.**
 - **M7. Budget.** Au plus 50 articles. Chaque article dit quelle propriété formelle il préserve ou ajoute.
+- **M8. Pas d'effet de seuil** (DÉCIDÉ). Une durée ou un montant ne saute jamais quand une donnée (ancienneté, salaire, activité) change un peu. En temps discret, cela se dit par des incréments bornés : un jour d'ancienneté de plus allonge le préavis d'au plus un jour ; un mois d'ancienneté de plus augmente l'indemnité de moins de 3/80 du salaire de référence. Les seuils qui restent sont des limites (plafonds de santé, durée maximale de l'essai), pas des paliers de calcul.
 
 ---
 
@@ -66,12 +70,12 @@
 ### Contrat
 - **P1. Contrat unique, sans terme** (DÉCIDÉ). Le contrat n'a qu'une seule forme. Aucune date de fin ne peut être convenue à l'embauche : la relation ne prend fin que par un préavis, une résiliation immédiate pour juste motif, un accord écrit des parties ou le décès du salarié.
   - **Pas de préavis anticipé** (DÉCIDÉ). Le préavis ordinaire (P4) ne peut être notifié qu'après la fin de la période d'essai. Pendant l'essai, seule la rupture d'essai (P3) est possible.
-  - Théorème visé : toute relation qui survit à la période d'essai dure au moins *durée d'essai + 30 jours*, sauf résiliation immédiate pour juste motif, accord écrit ou décès.
+  - Théorème : un licenciement après l'essai intervient au plus tôt à *durée d'essai + préavis à la fin de l'essai* (60 jours pour l'essai par défaut), quels que soient l'accord et le contrat. Ce n'est pas vrai de la démission, dont le préavis peut être raccourci jusqu'à zéro (prouvé en Lean).
 - **P2. Écrit minimal.** Le contrat écrit indique les parties, la date de début, la fonction, le salaire et la durée de travail convenue.
-- **P3. Période d'essai.** 30 jours par défaut, 90 jours au maximum ; rupture libre avec 7 jours de préavis pendant l'essai. Le préavis d'essai peut se terminer après la fin de l'essai (DÉCIDÉ).
+- **P3. Période d'essai.** 30 jours par défaut, 90 jours au maximum ; rupture libre pendant l'essai, avec le préavis de P4 (7 jours au jour 0, 30 jours au jour 30). Le préavis d'essai peut se terminer après la fin de l'essai (DÉCIDÉ). La fin de l'essai ne crée pas de saut de préavis.
 
 ### Rupture
-- **P4. Liberté de résiliation des deux parties, sans motif** (DÉCIDÉ). Préavis progressif : 30 jours la 1ʳᵉ année, 60 jours de la 2ᵉ à la 9ᵉ, 90 jours ensuite (`relative`). Il court à partir du lendemain de la réception de la notification (DÉCIDÉ). Le préavis dû par l'employeur ne peut qu'être allongé, celui dû par le salarié qu'être raccourci (DÉCIDÉ).
+- **P4. Liberté de résiliation des deux parties, sans motif** (DÉCIDÉ). Préavis continu (DÉCIDÉ) : `⌊min(7 + 23j/30, 30 + 6(j − 30)/67, 60 + 3(j − 365)/292, 90)⌋` jours, où `j` est l'ancienneté en jours à la réception de la notification ; soit 7 j au jour 0, 30 j au jour 30, 60 j à 1 an, 90 j à 9 ans (`relative`). Jamais moins que les anciens paliers après un essai de 30 jours. Il court à partir du lendemain de la réception de la notification (DÉCIDÉ). Le préavis dû par l'employeur ne peut qu'être allongé, celui dû par le salarié qu'être raccourci (DÉCIDÉ).
 - **P5. Motivation sur demande.** C'est une simple information, pas une condition de validité.
 - **P6. Indemnité de rupture** (DÉCIDÉ).
 
@@ -79,11 +83,11 @@
 
   - **S** = smoothstep 3t² − 2t³ ; **m** = ancienneté en mois ; saturation à 240 mois (20 ans) ; plafond de 6 mois de salaire de référence.
   - **Cas où elle est due :** uniquement en cas de résiliation ordinaire **par l'employeur** (P4). Elle n'est pas due en cas de démission ni de résiliation immédiate pour juste motif (P9).
-  - **SR = salaire de référence = EMA des salaires mensuels :**
-    - **Fenêtre :** les 60 derniers mois **payés**. Les mois sans salaire (suspension, période de protection) sont exclus et la fenêtre remonte d'autant. Si le contrat compte moins de 60 mois payés, on prend tous ses mois.
-    - **Récurrence :** du plus ancien au plus récent, e₁ = s₁ puis eₖ = (1/24)·sₖ + (23/24)·eₖ₋₁.
-    - **Salaire mensuel :** rémunération brute totale du mois, primes et heures supplémentaires comprises.
-    - **Propriété anti-manipulation :** une variation Δ du dernier salaire ne déplace SR que de Δ/24.
+  - **SR = salaire de référence = moyenne pondérée des salaires ramenés à temps plein** (DÉCIDÉ) :
+    - **Données :** pour chaque mois, le salaire mensuel (rémunération brute totale, primes et heures supplémentaires comprises) et le taux d'activité τ ∈ [0, 1] (fraction du mois travaillée ou rémunérée, congés payés compris).
+    - **Récurrence :** sur tout le contrat, du plus ancien au plus récent, A₀ = B₀ = 0, Aₖ = (1/24)·sₖ + (23/24)·Aₖ₋₁, Bₖ = (1/24)·τₖ + (23/24)·Bₖ₋₁ ; SR = A / B (0 si B = 0).
+    - **Continuité :** un mois suspendu ne change rien ; un mois presque suspendu presque rien ; un mois partiel payé au prorata rien du tout. Les mois anciens s'effacent progressivement (ceux de plus de 5 ans pèsent moins de 8 % au total), sans sortie brutale d'une fenêtre.
+    - **Propriété anti-manipulation :** une variation Δ du dernier salaire déplace SR d'exactement Δ/(24·B) ; après 5 ans à temps plein, moins de Δ/22, donc moins de 3Δ/11 sur l'indemnité.
 - **P7. Congé abusif = liste fermée de motifs interdits.** Sanction : indemnité forfaitaire plafonnée, sans réintégration.
 - **P8. Périodes de protection.** Congé nul pendant une incapacité ou une maternité ; un préavis en cours est suspendu.
 - **P9. Résiliation immédiate pour juste motif** (notion ouverte, M2).

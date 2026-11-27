@@ -1,11 +1,12 @@
 import { describe, expect, test } from "vitest";
-import { q, eq, sub, add, toFixed, floor, natFloor } from "./rational.js";
+import { q, eq, sub, add, mul, div, cmp, ZERO, toFixed, floor, natFloor } from "./rational.js";
 import {
   LAW_PARAMS,
   coefficient,
   currentLawCoefficient,
+  SUSPENDED,
+  activityMass,
   referenceSalary,
-  salaryWindow,
   severancePay,
   smoothstep,
 } from "./p6.js";
@@ -51,10 +52,40 @@ describe("P6 matches the Lean examples", () => {
 });
 
 describe("P6 properties", () => {
-  test("months without salary leave the window, which reaches back", () => {
-    const h = [...repeat(10, 100), 0n, 0n, ...repeat(60, 200)];
-    expect(salaryWindow(h)).toHaveLength(60);
-    expect(eq(referenceSalary(h), q(200))).toBe(true);
+  // salaireReference_encadrement: constant full-time salary.
+  test("a constant salary is its own reference salary", () => {
+    expect(eq(referenceSalary(repeat(37, 250000)), q(250000))).toBe(true);
+  });
+
+  // salaireReference_suspendu: a suspended month changes nothing.
+  test("a suspended month leaves SR unchanged", () => {
+    const h = [...repeat(10, 100000), ...repeat(5, 200000)];
+    expect(eq(referenceSalary([...h, SUSPENDED]), referenceSalary(h))).toBe(true);
+  });
+
+  // salaireReference_prorata: a partial month paid pro rata changes nothing.
+  test("a partial month paid pro rata leaves SR unchanged", () => {
+    const h = repeat(24, 300000);
+    const activity = q(1, 3);
+    const sr = referenceSalary([...h, SUSPENDED]);
+    const partial = { salary: 100000n, activity };
+    expect(eq(mul(activity, sr), q(100000))).toBe(true);
+    expect(eq(referenceSalary([...h, partial]), sr)).toBe(true);
+  });
+
+  // salaireReference_mois_proche: no jump between 0 € and 1 cent.
+  test("an almost suspended month almost does not count", () => {
+    const h = repeat(120, 300000);
+    // One cent for a thousandth of a month: SR moves by 13 cents, within the
+    // proved bound α(s + τ·SR)/B (125 € with the former rule, which counted
+    // the month in full).
+    const before = [...h, SUSPENDED];
+    const month = { salary: 1n, activity: q(1, 1000) };
+    const sr = referenceSalary(before);
+    const shift = sub(sr, referenceSalary([...h, month]));
+    const bound = div(mul(LAW_PARAMS.alpha, add(q(month.salary), mul(month.activity, sr))), activityMass(before));
+    expect(cmp(shift, ZERO) > 0 && cmp(shift, bound) <= 0).toBe(true);
+    expect(cmp(shift, q(20)) < 0).toBe(true);
   });
 
   test("no severance unless the employer terminates ordinarily", () => {
@@ -69,23 +100,26 @@ describe("P6 properties", () => {
   });
 
   // salaireReference_sensibilite and indemniteRupture_manipulation, on samples.
-  test("last salary moves SR by exactly Δ/24 and severance by < Δ/4 + 1", () => {
+  test("last salary moves SR by exactly αΔ/B; after 5 years, severance by < 3Δ/11 + 1", () => {
     let seed = 7;
     const rand = (n) => (seed = (seed * 48271) % 2147483647) % n;
     for (let i = 0; i < 200; i++) {
-      const h = Array.from({ length: 1 + rand(90) }, () => BigInt(rand(3) ? 100000 + rand(900000) : 0));
-      if (!h.some((s) => s !== 0n)) h.push(150000n);
-      const x = BigInt(1 + rand(800000));
+      const old = Array.from({ length: rand(60) }, () =>
+        rand(4) ? BigInt(100000 + rand(900000)) : { salary: BigInt(rand(100000)), activity: q(rand(4), 3) },
+      );
+      const recent = repeat(59 + rand(40), 100000 + rand(900000));
+      const x = BigInt(rand(800000));
       const delta = BigInt(rand(500000));
       const m = rand(400);
-      const low = [...h, x];
-      const high = [...h, x + delta];
-      expect(eq(sub(referenceSalary(high), referenceSalary(low)), q(delta, 24))).toBe(true);
+      const low = [...old, ...recent, x];
+      const high = [...old, ...recent, x + delta];
+      const shift = sub(referenceSalary(high), referenceSalary(low));
+      expect(eq(shift, div(mul(LAW_PARAMS.alpha, q(delta)), activityMass(low)))).toBe(true);
       const pLow = severancePay(low, m, fired);
       const pHigh = severancePay(high, m, fired);
       expect(pLow <= pHigh).toBe(true);
-      // pHigh < pLow + Δ/4 + 1  ⇔  4·pHigh < 4·pLow + Δ + 4
-      expect(4n * pHigh < 4n * pLow + delta + 4n).toBe(true);
+      // pHigh < pLow + 3Δ/11 + 1  ⇔  11·pHigh < 11·pLow + 3Δ + 11
+      expect(11n * pHigh < 11n * pLow + 3n * delta + 11n).toBe(true);
     }
   });
 

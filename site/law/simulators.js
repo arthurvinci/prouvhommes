@@ -19,6 +19,6 @@ export const SIMULATORS = [
     question: "Peut-on gonfler ou dégonfler l’indemnité ?",
     lede: "Ce que change une baisse du dernier salaire, ou une forte prime, juste avant la rupture.",
     article: "art:salaire-reference",
-    params: ["alpha", "windowSize"],
+    params: ["alpha"],
   },
 ];

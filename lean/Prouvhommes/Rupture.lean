@@ -13,11 +13,12 @@ d'une liste d'événements.
 * Une notification est datée du jour de sa **réception**. Le préavis court
   à partir du lendemain : notifié au jour `d`, un préavis de `n` jours couvre
   les jours `d + 1, …, d + n`, et le dernier jour de la relation est `d + n`.
-* Pendant l'essai, une notification ouvre un préavis d'essai de 7 jours, qui
-  peut se terminer après la fin de l'essai (P3).
-* Après l'essai, une notification ouvre un préavis ordinaire de 30, 60 ou
-  90 jours selon l'ancienneté (P4). Il n'y a pas de préavis ordinaire avant la
-  fin de l'essai (P1).
+* Pendant l'essai, une notification ouvre une rupture d'essai (P3) ; après
+  l'essai, une résiliation ordinaire (P4). Il n'y a pas de préavis ordinaire
+  avant la fin de l'essai (P1). Dans les deux cas, la durée du préavis suit la
+  même courbe continue de l'ancienneté (`preavis`) : la fin de l'essai ne crée
+  pas de saut. Le préavis d'une rupture d'essai peut se terminer après la fin
+  de l'essai.
 * Les durées de préavis ne sont pas lues dans la loi : elles sont un paramètre
   `D : Delais` de la machine. `Delais.legal` donne les durées légales ; le
   modèle composé (`Modele.lean`) les obtient par la hiérarchie des normes, à
@@ -36,7 +37,8 @@ Résultats principaux :
 * `fin_justifiee` (**T-PREAVIS**) : toute fin de relation est justifiée par un
   préavis effectivement couru, un juste motif, un accord écrit ou un décès ;
 * `duree_minimale` : un licenciement ordinaire n'intervient jamais avant
-  « durée d'essai + 30 jours », quelles que soient les stipulations ; ce n'est
+  « durée d'essai + préavis à la fin de l'essai » (60 jours pour l'essai de
+  30 jours par défaut), quelles que soient les stipulations ; ce n'est
   pas vrai d'une démission, dont le préavis peut être raccourci
   (`demission_sans_duree_minimale`, dans `Modele.lean`) ;
 * `protection_nullite`, `protection_suspend` : effets de la protection (P8).
@@ -93,10 +95,10 @@ inductive Evenement (I : Interpretation)
 
 namespace Cadre
 
-/-- Durée du préavis, en jours, pour une notification reçue au jour `j`. -/
+/-- Durée légale du préavis, en jours, pour une notification reçue au jour `j` :
+la même courbe dans les deux cadres. -/
 def duree : Cadre → Jour → ℕ
-  | essai, _ => preavisEssai
-  | ordinaire, j => preavisOrdinaire j
+  | _, j => preavis j
 
 /-- La phase dans laquelle une notification ouvre ce cadre de préavis. -/
 def phaseNotification : Cadre → Phase
@@ -119,8 +121,8 @@ structure Delais where
 
 namespace Delais
 
-/-- Les délais légaux : 7 jours pendant l'essai (P3), 30, 60 ou 90 jours
-ensuite (P4), pour les deux parties. -/
+/-- Les délais légaux : la courbe `preavis`, pour les deux parties et dans les
+deux cadres. -/
 def legal : Delais := ⟨fun _ c j => c.duree j⟩
 
 /-- Des délais sont **admissibles** si le préavis dû par l'employeur n'est
@@ -445,31 +447,34 @@ theorem fin_resiliationImmediate (k : Contrat) (evs : List (Evenement I)) {p : P
   exact ⟨f, hf⟩
 
 /-- Durée minimale, sous une hypothèse explicite : si le préavis ordinaire de
-`p` dure toujours au moins 30 jours, une résiliation ordinaire par `p` laisse
-au moins « durée d'essai + 30 jours ». -/
+`p` n'est jamais plus court que le préavis légal, une résiliation ordinaire
+par `p` intervient au plus tôt à « durée d'essai + préavis légal à la fin de
+l'essai ». -/
 theorem duree_minimale_of (k : Contrat) (evs : List (Evenement I)) {p : Partie} {j : Jour}
-    (hD : ∀ j, 30 ≤ D.duree p .ordinaire j)
+    (hD : ∀ j, preavis j ≤ D.duree p .ordinaire j)
     (h : (execute k D evs).phase = .termine (.resiliationOrdinaire p) j) :
-    k.dureeEssai + 30 ≤ j := by
+    k.dureeEssai + preavis k.dureeEssai ≤ j := by
   obtain ⟨pre, -, -, h1, h3⟩ := fin_resiliationOrdinaire D k evs h
-  have := actif_apres_essai D k pre h1
+  have he := actif_apres_essai D k pre h1
+  have := preavis_monotone he
   have := hD (execute k D pre).jour
   omega
 
 /-- **Durée minimale (P1).** Pour tous délais admissibles, donc quels que
 soient l'accord d'entreprise et le contrat, un licenciement ordinaire
-intervient au plus tôt « durée d'essai + 30 jours » après le début du contrat. -/
+intervient au plus tôt à « durée d'essai + préavis légal à la fin de
+l'essai » : 60 jours avec l'essai de 30 jours par défaut. -/
 theorem duree_minimale (k : Contrat) (evs : List (Evenement I)) {D : Delais}
     (hD : D.Admissible) {j : Jour}
     (h : (execute k D evs).phase = .termine (.resiliationOrdinaire .employeur) j) :
-    k.dureeEssai + 30 ≤ j :=
-  duree_minimale_of D k evs (fun j => (preavisOrdinaire_ge_30 j).trans (hD .ordinaire j)) h
+    k.dureeEssai + preavis k.dureeEssai ≤ j :=
+  duree_minimale_of D k evs (fun j => hD .ordinaire j) h
 
 /-- Avec les délais légaux, la durée minimale vaut aussi pour la démission. -/
 theorem duree_minimale_legal (k : Contrat) (evs : List (Evenement I)) {p : Partie} {j : Jour}
     (h : (execute k Delais.legal evs).phase = .termine (.resiliationOrdinaire p) j) :
-    k.dureeEssai + 30 ≤ j :=
-  duree_minimale_of Delais.legal k evs (fun j => preavisOrdinaire_ge_30 j) h
+    k.dureeEssai + preavis k.dureeEssai ≤ j :=
+  duree_minimale_of Delais.legal k evs (fun _ => le_rfl) h
 
 /-- **Pas de préavis anticipé (P1).** Un préavis ordinaire en cours a été
 notifié après la fin de l'essai. -/
@@ -497,7 +502,7 @@ def contratType : Contrat :=
 /-- `n` jours qui passent. -/
 def jours (n : ℕ) : List (Evenement interpretationVide) := List.replicate n .jourPasse
 
-/-- Licenciement reçu au jour 400 (1 an révolu) : 60 jours de préavis,
+/-- Licenciement reçu au jour 400 (1 an et 35 jours) : 60 jours de préavis,
 dernier jour 460. -/
 example : (execute contratType Delais.legal (jours 400 ++ [.notification .employeur] ++ jours 61)).phase
     = .termine (.resiliationOrdinaire .employeur) 460 := by
@@ -510,10 +515,10 @@ example : (execute contratType Delais.legal (jours 400 ++ [.notification .employ
     = .termine (.resiliationOrdinaire .employeur) 470 := by
   decide +kernel
 
-/-- Rupture d'essai reçue au jour 28 : le préavis de 7 jours déborde après la
-fin de l'essai (jour 30), dernier jour 35. -/
-example : (execute contratType Delais.legal (jours 28 ++ [.notification .salarie] ++ jours 8)).phase
-    = .termine (.ruptureEssai .salarie) 35 := by
+/-- Rupture d'essai reçue au jour 28 : le préavis de 28 jours déborde après la
+fin de l'essai (jour 30), dernier jour 56. -/
+example : (execute contratType Delais.legal (jours 28 ++ [.notification .salarie] ++ jours 29)).phase
+    = .termine (.ruptureEssai .salarie) 56 := by
   decide +kernel
 
 end Prouvhommes

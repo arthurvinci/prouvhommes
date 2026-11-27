@@ -24,31 +24,40 @@ soixante-cinq.
 
 \article[relative]{Rupture pendant l'essai}\label{art:rupture-essai}
 Pendant la période d'essai, chaque partie peut mettre fin au contrat à tout
-moment, sans motif, avec un préavis de sept jours. Le préavis court même s'il
-se termine après la fin de la période d'essai.
-\lean{preavisEssai}
-\lean{dispPreavisEssaiEmployeur}
-\lean{dispPreavisEssaiSalarie}
+moment, sans motif, moyennant le préavis prévu à
+l'article~\ref{art:resiliation}. Le préavis court même s'il se termine après
+la fin de la période d'essai.
+\lean{dispPreavisEmployeur}
+\lean{dispPreavisSalarie}
 \theoreme{fin_ruptureEssai}
 
 \article[relative]{Résiliation ordinaire}\label{art:resiliation}
 I. --- Après la période d'essai, chaque partie peut résilier le contrat à tout
-moment, sans motif, moyennant un préavis de :
-\begin{itemize}
-  \item trente jours si le salarié a moins d'un an d'ancienneté ;
-  \item soixante jours s'il a d'un an à moins de neuf ans d'ancienneté ;
-  \item quatre-vingt-dix jours au-delà.
-\end{itemize}
-L'ancienneté s'apprécie au jour de la réception de la notification. Aucune
-résiliation ordinaire ne peut être notifiée pendant la période d'essai.
+moment, sans motif, moyennant un préavis. Aucune résiliation ordinaire ne peut
+être notifiée pendant la période d'essai.
 
-II. --- Un accord d'entreprise ou le contrat peut allonger le préavis dû par
+II. --- La durée du préavis, en jours, est la partie entière de la plus petite
+des quatre quantités suivantes, où $j$ est l'ancienneté du salarié en jours au
+jour de la réception de la notification :
+\[
+  7 + \frac{23}{30}\,j, \qquad
+  30 + \frac{6}{67}\,(j - 30), \qquad
+  60 + \frac{3}{292}\,(j - 365), \qquad
+  90.
+\]
+Le préavis est ainsi de sept jours au début du contrat, de trente jours après
+trente jours, de soixante jours après un an et de quatre-vingt-dix jours après
+neuf ans ; entre ces dates, il croît régulièrement, d'au plus un jour par jour
+d'ancienneté.
+
+III. --- Un accord d'entreprise ou le contrat peut allonger le préavis dû par
 l'employeur et raccourcir celui dû par le salarié
 (article~\ref{art:relatives}).
-\lean{preavisOrdinaire}
+\lean{preavis}
 \lean{dispPreavisEmployeur}
 \lean{dispPreavisSalarie}
-\theoreme{preavisLegal_monotone}
+\theoreme{preavis_monotone}
+\theoreme{fin_preavis_succ}
 \theoreme{fin_resiliationOrdinaire}
 \theoreme{duree_minimale}
 \theoreme{preavis_ordinaire_apres_essai}
@@ -94,18 +103,26 @@ résiliation.
 
 \article{Salaire de référence}\label{art:salaire-reference}
 I. --- Le salaire mensuel est la rémunération brute totale versée au titre
-d'un mois, primes et heures supplémentaires comprises. Un mois sans salaire
-n'est pas pris en compte.
+d'un mois, primes et heures supplémentaires comprises. Le taux d'activité d'un
+mois est la fraction de ce mois pendant laquelle le salarié a travaillé ou a été
+rémunéré, congés payés compris ; il est compris entre zéro et un.
 
-II. --- Sont pris en compte les soixante derniers mois pour lesquels un salaire
-a été versé ou, si le contrat en compte moins, tous ces mois.
+II. --- Tous les mois du contrat sont pris en compte, du plus ancien au plus
+récent. La masse des salaires et la masse d'activité sont nulles avant le
+premier mois. À chaque mois, la masse des salaires devient la somme d'un
+vingt-quatrième du salaire de ce mois et des vingt-trois vingt-quatrièmes de la
+masse des salaires précédente ; la masse d'activité devient la somme d'un
+vingt-quatrième du taux d'activité de ce mois et des vingt-trois
+vingt-quatrièmes de la masse d'activité précédente.
 
-III. --- Les mois pris en compte sont parcourus du plus ancien au plus récent.
-Le salaire de référence est d'abord égal au salaire du premier mois. À chaque
-mois suivant, il devient la somme d'un vingt-quatrième du salaire de ce mois et
-des vingt-trois vingt-quatrièmes du salaire de référence précédent.
+III. --- Le salaire de référence est le quotient de la masse des salaires par la
+masse d'activité. Il est nul si la masse d'activité est nulle.
+\lean{MoisTravaille}
 \lean{salaireReference}
+\theoreme{salaireReference_encadrement}
 \theoreme{salaireReference_sensibilite}
+\theoreme{salaireReference_prorata}
+\theoreme{salaireReference_mois_proche}
 
 \article[relative]{Indemnité de rupture}\label{art:indemnite}
 I. --- En cas de résiliation ordinaire du contrat par l'employeur, le
@@ -130,6 +147,7 @@ ni en cas d'accord écrit des parties ou de décès du salarié.
 \theoreme{indemniteRupture_manipulation}
 \theoreme{indemniteRupture_eq_zero}
 \theoreme{indemnite_mono_anciennete}
+\theoreme{indemnite_saut_mensuel}
 \theoreme{indemnite_ge_legal}
 
 \begin{center}

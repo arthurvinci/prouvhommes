@@ -20,15 +20,15 @@ Seuls des théorèmes qui traversent les modules ont leur place ici. Ce sont
 eux qui révèlent les effets que personne n'a écrits :
 
 * `duree_minimale_scenario` : un licenciement laisse au moins « essai +
-  30 jours », quels que soient l'accord et le contrat ;
+  préavis à la fin de l'essai », quels que soient l'accord et le contrat ;
 * `demission_sans_duree_minimale` : ce n'est pas vrai d'une démission, dont le
   préavis peut être raccourci jusqu'à zéro ;
 * `accord_domine_licenciement` : pour l'employeur, faire signer un accord
-  écrit au lieu de licencier met fin au contrat au moins 30 jours plus tôt,
-  et sans indemnité ;
-* `seuil_preavis` : un jour de retard dans la notification d'un licenciement,
-  au premier anniversaire du contrat, allonge la relation de 31 jours.
-  L'indemnité, elle, n'a pas d'effet de seuil (`indemnite_saut_mensuel`).
+  écrit au lieu de licencier met fin au contrat plus tôt (de tout le
+  préavis), et sans indemnité ;
+* `continuite_preavis` : notifier un licenciement un jour plus tard fait finir
+  le contrat 1 ou 2 jours plus tard, jamais plus. Avec l'ancienne version à
+  paliers, un jour de retard au premier anniversaire coûtait 31 jours.
 -/
 
 namespace Prouvhommes
@@ -40,13 +40,9 @@ rupture. Chaque champ est vide par défaut : la loi s'applique. -/
 structure Conventions where
   /-- Durée de l'essai (P3, dispositive). -/
   essai : Stipulations ℕ := {}
-  /-- Préavis de rupture d'essai dû par l'employeur (P3, relative). -/
-  preavisEssaiEmployeur : Stipulations ℕ := {}
-  /-- Préavis de rupture d'essai dû par le salarié (P3, relative). -/
-  preavisEssaiSalarie : Stipulations ℕ := {}
-  /-- Préavis ordinaire dû par l'employeur (P4, relative). -/
+  /-- Préavis dû par l'employeur, pendant l'essai comme après (P3, P4, relative). -/
   preavisEmployeur : Stipulations ℕ := {}
-  /-- Préavis ordinaire dû par le salarié (P4, relative). -/
+  /-- Préavis dû par le salarié, pendant l'essai comme après (P3, P4, relative). -/
   preavisSalarie : Stipulations ℕ := {}
 
 namespace Conventions
@@ -54,18 +50,14 @@ namespace Conventions
 /-- Les délais de préavis applicables, résolus par la hiérarchie des normes. -/
 def delais (cv : Conventions) : Delais where
   duree
-    | .employeur, .essai, _ => applicable dispPreavisEssaiEmployeur cv.preavisEssaiEmployeur
-    | .salarie, .essai, _ => applicable dispPreavisEssaiSalarie cv.preavisEssaiSalarie
-    | .employeur, .ordinaire, j => applicable (dispPreavisEmployeur j) cv.preavisEmployeur
-    | .salarie, .ordinaire, j => applicable (dispPreavisSalarie j) cv.preavisSalarie
+    | .employeur, _, j => applicable (dispPreavisEmployeur j) cv.preavisEmployeur
+    | .salarie, _, j => applicable (dispPreavisSalarie j) cv.preavisSalarie
 
 /-- Quelles que soient les conventions, les délais obtenus sont admissibles :
 l'employeur ne doit jamais moins que le préavis légal. -/
 theorem delais_admissible (cv : Conventions) : cv.delais.Admissible := by
   intro c j
-  cases c
-  · exact applicable_relative_plancher (d := dispPreavisEssaiEmployeur) rfl _
-  · exact preavisEmployeur_ge_legal j _
+  cases c <;> exact preavisEmployeur_ge_legal j _
 
 /-- Sans stipulation, les délais sont les délais légaux. -/
 theorem delais_vide : ({} : Conventions).delais = Delais.legal := by
@@ -87,9 +79,9 @@ structure Scenario (I : Interpretation) where
   conventions : Conventions := {}
   /-- Ce qui se passe, dans l'ordre. -/
   evenements : List (Evenement I)
-  /-- Salaire brut payé au titre du mois `m` du contrat (mois 0 = premier
-  mois), en centimes ; `0` pour un mois non payé. -/
-  salaire : Mois → Centimes := fun _ => contrat.salaireMensuel
+  /-- Le mois `m` du contrat (mois 0 = premier mois) : salaire versé et taux
+  d'activité. Par défaut, un mois plein au salaire du contrat. -/
+  mois : Mois → MoisTravaille := fun _ => .plein contrat.salaireMensuel
 
 /-- L'issue d'une relation de travail terminée. -/
 structure Issue where
@@ -111,8 +103,8 @@ def contratApplicable : Contrat := s.contrat.avecEssai s.conventions.essai
 /-- L'état de la relation après tous les événements. -/
 def etat : Etat := execute s.contratApplicable s.conventions.delais s.evenements
 
-/-- Les salaires des `m` premiers mois, du plus ancien au plus récent. -/
-def historique (m : Mois) : List Centimes := (List.range m).map s.salaire
+/-- Les `m` premiers mois, du plus ancien au plus récent. -/
+def historique (m : Mois) : List MoisTravaille := (List.range m).map s.mois
 
 /-- L'issue d'une relation terminée à la date `j` pour la cause `c`. -/
 def issueDe (c : CauseFin) (j : Jour) : Issue :=
@@ -142,10 +134,11 @@ variable {I : Interpretation}
 
 /-- **Durée minimale, toutes conventions confondues.** Quels que soient
 l'accord d'entreprise et le contrat, un licenciement ordinaire intervient au
-plus tôt « durée d'essai + 30 jours » après le début du contrat. -/
+plus tôt « durée d'essai + préavis légal à la fin de l'essai » après le début
+du contrat : 60 jours avec l'essai de 30 jours par défaut. -/
 theorem duree_minimale_scenario (s : Scenario I) {i : Issue} (h : s.issue = some i)
     (hc : i.cause = .resiliationOrdinaire .employeur) :
-    s.contratApplicable.dureeEssai + 30 ≤ i.dernierJour := by
+    s.contratApplicable.dureeEssai + preavis s.contratApplicable.dureeEssai ≤ i.dernierJour := by
   obtain ⟨hp, -⟩ := s.issue_eq_some h
   rw [hc] at hp
   exact duree_minimale _ _ (Conventions.delais_admissible _) hp
@@ -173,29 +166,31 @@ légaux. -/
 theorem demission_sans_duree_minimale :
     ∃ s : Scenario interpretationVide, ∃ i, s.issue = some i ∧
       i.cause = .resiliationOrdinaire .salarie ∧
-      i.dernierJour < s.contratApplicable.dureeEssai + 30 :=
+      i.dernierJour < s.contratApplicable.dureeEssai + preavis s.contratApplicable.dureeEssai :=
   ⟨scenarioDemissionImmediate,
     ⟨.resiliationOrdinaire .salarie, 30, 0, 0⟩, by decide +kernel, rfl, by decide⟩
 
 /-- **L'accord écrit domine le licenciement, pour l'employeur.** Dans toute
 relation qui se termine par un licenciement ordinaire, remplacer la
 notification du licenciement par un accord écrit, signé le même jour, met fin
-au contrat au moins 30 jours plus tôt (pas de préavis à payer), et sans
-indemnité. Le code donne ainsi à l'employeur une raison forte d'obtenir la
+au contrat plus tôt, d'au moins le préavis légal à la fin de l'essai (pas de
+préavis à payer), et sans indemnité. Le code donne ainsi à l'employeur une raison forte d'obtenir la
 signature du salarié. -/
 theorem accord_domine_licenciement (s : Scenario I) {i : Issue} (h : s.issue = some i)
     (hc : i.cause = .resiliationOrdinaire .employeur) :
     ∃ pre post, s.evenements = pre ++ .notification .employeur :: post ∧
       ∃ i', ({ s with evenements := pre ++ .accordCommun :: post } : Scenario I).issue = some i' ∧
-        i'.cause = .accordCommun ∧ i'.dernierJour + 30 ≤ i.dernierJour ∧ i'.indemnite = 0 := by
+        i'.cause = .accordCommun ∧
+        i'.dernierJour + preavis s.contratApplicable.dureeEssai ≤ i.dernierJour ∧
+        i'.indemnite = 0 := by
   obtain ⟨hp, -⟩ := s.issue_eq_some h
   rw [hc] at hp
   have hp' : (execute s.contratApplicable s.conventions.delais s.evenements).phase
       = .termine (.resiliationOrdinaire .employeur) i.dernierJour := hp
   obtain ⟨pre, post, he, h1, h3⟩ := fin_resiliationOrdinaire _ _ _ hp'
-  have h30 := (preavisOrdinaire_ge_30
-    (execute s.contratApplicable s.conventions.delais pre).jour).trans
-    (Conventions.delais_admissible s.conventions .ordinaire _)
+  have h30 := (preavis_monotone (actif_apres_essai _ _ pre h1)).trans
+    (Conventions.delais_admissible s.conventions .ordinaire
+      (execute s.contratApplicable s.conventions.delais pre).jour)
   refine ⟨pre, post, he,
     s.issueDe .accordCommun (execute s.contratApplicable s.conventions.delais pre).jour,
     ?_, rfl, ?_, ?_⟩
@@ -224,12 +219,12 @@ def scenarioLicenciement (j : ℕ) : Scenario interpretationVide :=
   { contrat := contratExemple,
     evenements := joursQuiPassent j ++ [.notification .employeur] ++ joursQuiPassent 100 }
 
-/-- **Effet de seuil du préavis.** Un licenciement reçu au jour 364 laisse
-30 jours de préavis : dernier jour 394. Reçu un jour plus tard, au premier
-anniversaire, il en laisse 60 : dernier jour 425. Un jour de retard coûte 31
-jours de relation. -/
-theorem seuil_preavis :
-    ((scenarioLicenciement 364).issue.map Issue.dernierJour) = some 394 ∧
+/-- **Continuité du préavis.** Un licenciement reçu au jour 364 finit au jour
+423, reçu au jour 365 il finit au jour 425. Avec l'ancienne version à paliers
+(30 jours la première année, 60 ensuite), le second finissait 31 jours après
+le premier. Le cas général est `fin_preavis_succ`. -/
+theorem continuite_preavis :
+    ((scenarioLicenciement 364).issue.map Issue.dernierJour) = some 423 ∧
       ((scenarioLicenciement 365).issue.map Issue.dernierJour) = some 425 := by
   constructor <;> decide +kernel
 
