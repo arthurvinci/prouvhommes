@@ -11,18 +11,19 @@ Le contrat est constaté par écrit. L'écrit indique les parties, la date de
 début, la fonction, le salaire mensuel et la durée de travail convenue.
 \lean{Contrat}
 
-\article[relative]{Période d'essai}\label{art:essai}
-I. --- Les trente premiers jours du contrat constituent une période d'essai.
-Le contrat peut la réduire, la supprimer ou la porter à quatre-vingt-dix jours
-au plus.
-
-II. --- Pendant la période d'essai, chaque partie peut mettre fin au contrat
-à tout moment, sans motif, avec un préavis de sept jours. Le préavis court
-même s'il se termine après la fin de la période d'essai.
-
-III. --- Aucune résiliation ordinaire au sens de l'article~\ref{art:resiliation}
-ne peut être notifiée avant la fin de la période d'essai.
+\article[dispositive]{Période d'essai}\label{art:essai}
+Les trente premiers jours du contrat constituent une période d'essai. Un
+accord d'entreprise ou le contrat peut la réduire, la supprimer ou l'allonger,
+dans la limite absolue de quatre-vingt-dix jours.
 \lean{Contrat.dureeEssai}
+\lean{dispDureeEssai}
+\theoreme{dureeEssai_le_max}
+
+\article[relative]{Rupture pendant l'essai}\label{art:rupture-essai}
+Pendant la période d'essai, chaque partie peut mettre fin au contrat à tout
+moment, sans motif, avec un préavis de sept jours. Le préavis court même s'il
+se termine après la fin de la période d'essai.
 \lean{preavisEssai}
+\lean{dispPreavisEssaiEmployeur}
+\lean{dispPreavisEssaiSalarie}
 \theoreme{fin_ruptureEssai}
-\theoreme{preavis_ordinaire_apres_essai}

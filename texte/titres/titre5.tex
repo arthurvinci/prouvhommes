@@ -1,0 +1,69 @@
+% Les titres III (temps de travail) et IV (salaire) sont à venir : on aligne
+% la numérotation des sections sur celle des titres.
+\setcounter{section}{4}
+\section{Titre V --- Sources et hiérarchie des normes}
+
+\article{Niveaux d'impérativité}\label{art:niveaux}
+I. --- Chaque disposition du présent code est absolue, relative ou
+dispositive. Son niveau est indiqué en tête de l'article.
+
+II. --- Pour chaque disposition chiffrée, le code fixe le sens favorable au
+salarié : une valeur plus grande ou une valeur plus petite. Le tableau
+ci-dessous les récapitule.
+\lean{Disposition}
+\lean{Sens}
+
+\article[absolue]{Dispositions absolues}\label{art:absolues}
+Il ne peut être dérogé à une disposition absolue, ni par accord d'entreprise,
+ni par contrat, même en faveur du salarié. Toute stipulation contraire est
+réputée non écrite.
+\lean{applicable}
+\theoreme{applicable_absolue}
+
+\article[absolue]{Dispositions relatives}\label{art:relatives}
+I. --- Un accord d'entreprise ou le contrat ne peut déroger à une disposition
+relative qu'en faveur du salarié.
+
+II. --- Lorsque la loi, un accord d'entreprise et le contrat fixent chacun une
+valeur, la valeur la plus favorable au salarié s'applique. Une stipulation
+moins favorable que la loi est sans effet.
+
+III. --- Le préavis dû par l'employeur ne peut qu'être allongé ; le préavis dû
+par le salarié ne peut qu'être raccourci.
+\lean{applicable}
+\theoreme{applicable_relative_plancher}
+\theoreme{applicable_relative_faveur}
+\theoreme{applicable_relative_clause_defavorable}
+\theoreme{preavisEmployeur_ge_legal}
+\theoreme{preavisSalarie_le_legal}
+
+\article[absolue]{Dispositions dispositives et primauté de l'accord d'entreprise}\label{art:dispositives}
+I. --- Une disposition dispositive s'applique à défaut de stipulation
+contraire.
+
+II. --- L'accord d'entreprise l'emporte sur le contrat, et le contrat sur la
+loi.
+
+III. --- Lorsqu'une disposition dispositive comporte une limite absolue, une
+stipulation qui la dépasse est réduite à cette limite.
+\lean{applicable}
+\theoreme{applicable_dispositive_accord}
+\theoreme{applicable_dispositive_limite}
+\theoreme{dureeEssai_le_max}
+
+\begin{center}
+\footnotesize
+\begin{tabular}{llccc}
+  \multicolumn{5}{c}{\textit{Dispositions chiffrées du code}} \\[0.3em]
+  \hline
+  Disposition & Niveau & Valeur légale & Sens favorable & Limite \\
+  \hline
+  Préavis dû par l'employeur & relative & 30, 60 ou 90 jours & plus long & --- \\
+  Préavis dû par le salarié & relative & 30, 60 ou 90 jours & plus court & --- \\
+  Préavis d'essai dû par l'employeur & relative & 7 jours & plus long & --- \\
+  Préavis d'essai dû par le salarié & relative & 7 jours & plus court & --- \\
+  Durée de l'essai & dispositive & 30 jours & plus courte & 90 jours \\
+  Indemnité de rupture & relative & formule (art.~\ref{art:indemnite}) & plus élevée & --- \\
+  \hline
+\end{tabular}
+\end{center}

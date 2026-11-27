@@ -1,6 +1,7 @@
 import Prouvhommes.Preavis
 import Prouvhommes.Indemnite
 import Prouvhommes.Rupture
+import Prouvhommes.Hierarchie
 
 /-!
 # Vitrine
@@ -85,5 +86,52 @@ namespace Prouvhommes
 
 /-- info: 'Prouvhommes.protection_suspend' depends on axioms: [propext, Classical.choice] -/
 #guard_msgs in #print axioms protection_suspend
+
+/-! ## Hiérarchie des normes (M4, P15) -/
+
+/-! Absolue : aucune dérogation. -/
+
+/-- info: 'Prouvhommes.applicable_absolue' depends on axioms: [propext] -/
+#guard_msgs in #print axioms applicable_absolue
+
+/-! Relative : jamais moins favorable que la loi. -/
+
+/-- info: 'Prouvhommes.applicable_relative_plancher' depends on axioms: [propext] -/
+#guard_msgs in #print axioms applicable_relative_plancher
+
+/-! Relative : principe de faveur, au moins aussi favorable que chaque stipulation. -/
+
+/-- info: 'Prouvhommes.applicable_relative_faveur' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in #print axioms applicable_relative_faveur
+
+/-! Relative : une clause moins favorable que la loi est sans effet. -/
+
+/-- info: 'Prouvhommes.applicable_relative_clause_defavorable' depends on axioms: [propext] -/
+#guard_msgs in #print axioms applicable_relative_clause_defavorable
+
+/-! Dispositive : primauté de l'accord d'entreprise (P15). -/
+
+/-- info: 'Prouvhommes.applicable_dispositive_accord' depends on axioms: [propext] -/
+#guard_msgs in #print axioms applicable_dispositive_accord
+
+/-! Dispositive : la limite absolue n'est jamais dépassée. -/
+
+/-- info: 'Prouvhommes.applicable_dispositive_limite' depends on axioms: [propext] -/
+#guard_msgs in #print axioms applicable_dispositive_limite
+
+/-! Le préavis dû par l'employeur n'est jamais plus court que le préavis légal. -/
+
+/-- info: 'Prouvhommes.preavisEmployeur_ge_legal' depends on axioms: [propext] -/
+#guard_msgs in #print axioms preavisEmployeur_ge_legal
+
+/-! Le préavis dû par le salarié n'est jamais plus long que le préavis légal. -/
+
+/-- info: 'Prouvhommes.preavisSalarie_le_legal' depends on axioms: [propext] -/
+#guard_msgs in #print axioms preavisSalarie_le_legal
+
+/-! L'essai ne dépasse jamais 90 jours. -/
+
+/-- info: 'Prouvhommes.dureeEssai_le_max' depends on axioms: [propext] -/
+#guard_msgs in #print axioms dureeEssai_le_max
 
 end Prouvhommes

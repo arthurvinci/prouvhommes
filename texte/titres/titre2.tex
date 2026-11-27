@@ -32,13 +32,19 @@ moment, sans motif, moyennant un préavis de :
   \item soixante jours s'il a d'un an à moins de neuf ans d'ancienneté ;
   \item quatre-vingt-dix jours au-delà.
 \end{itemize}
-L'ancienneté s'apprécie au jour de la réception de la notification.
+L'ancienneté s'apprécie au jour de la réception de la notification. Aucune
+résiliation ordinaire ne peut être notifiée pendant la période d'essai.
 
-II. --- Le contrat peut allonger le préavis dû par l'employeur.
+II. --- Un accord d'entreprise ou le contrat peut allonger le préavis dû par
+l'employeur et raccourcir celui dû par le salarié
+(article~\ref{art:relatives}).
 \lean{preavisOrdinaire}
+\lean{dispPreavisEmployeur}
+\lean{dispPreavisSalarie}
 \theoreme{preavisLegal_monotone}
 \theoreme{fin_resiliationOrdinaire}
 \theoreme{duree_minimale}
+\theoreme{preavis_ordinaire_apres_essai}
 
 \article[relative]{Motivation sur demande}
 La partie qui résilie le contrat en indique le motif par écrit si l'autre
@@ -69,6 +75,7 @@ ni en cas d'accord écrit des parties ou de décès du salarié.
 \theoreme{indemniteRupture_manipulation}
 \theoreme{indemniteRupture_eq_zero}
 \theoreme{indemnite_mono_anciennete}
+\theoreme{indemnite_ge_legal}
 
 \begin{center}
 \footnotesize

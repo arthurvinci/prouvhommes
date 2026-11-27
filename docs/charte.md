@@ -1,4 +1,4 @@
-# Charte des principes — Prouv'hommes (v0.6, brouillon)
+# Charte des principes — Prouv'hommes (v0.7, brouillon)
 
 > Objectif : un code du travail d'environ 50 pages, d'inspiration libérale, écrit dès le départ pour être formalisable en Lean 4.
 > Statut : document de travail. Les points marqués [À TRANCHER] restent à décider.
@@ -19,6 +19,9 @@
   - P4 : le préavis court à partir du lendemain de la réception de la notification.
   - P3 : une rupture notifiée pendant l'essai reste une rupture d'essai, même si ses 7 jours de préavis se terminent après la fin de l'essai.
   - P1 : deux autres fins de la relation sont admises : l'accord écrit des parties et le décès du salarié.
+  - M4 : pour une disposition `relative`, on applique la valeur la plus favorable au salarié parmi la loi, l'accord d'entreprise et le contrat.
+  - P15 : pour une disposition `dispositive`, l'accord d'entreprise l'emporte sur le contrat, qui l'emporte sur la loi.
+  - P4 : « en faveur du salarié » s'apprécie dans chaque sens : le préavis dû par l'employeur ne peut qu'être allongé, celui dû par le salarié qu'être raccourci.
 
 ---
 
@@ -44,6 +47,8 @@
 - **M2. Notions ouvertes déclarées.** Les notions qui demandent un jugement (*juste motif*…) figurent dans une liste fermée. En Lean, ce sont des prédicats opaques. Les théorèmes sont prouvés pour toute interprétation de ces prédicats.
 - **M3. Règle générale puis exceptions**, avec des priorités explicites (logique par défaut à la Catala).
 - **M4. Trois niveaux d'impérativité** : `absolue` (non dérogeable), `relative` (dérogeable seulement en faveur du salarié), `dispositive` (librement dérogeable).
+  - Chaque disposition chiffrée a un **sens favorable** au salarié (plus grand ou plus petit).
+  - `relative` (DÉCIDÉ) : on applique la valeur la plus favorable au salarié parmi la loi, l'accord d'entreprise et le contrat. Une stipulation moins favorable que la loi est sans effet.
 - **M5. Temps discret, calcul exact.** Jour, heure, et mois pour l'ancienneté. Calculs intermédiaires en rationnels exacts (`ℚ`), un seul arrondi final au centime inférieur. Jamais de flottants.
 - **M6. Procédures = machines à états finies.**
 - **M7. Budget.** Au plus 50 articles. Chaque article dit quelle propriété formelle il préserve ou ajoute.
@@ -60,7 +65,7 @@
 - **P3. Période d'essai.** 30 jours par défaut, 90 jours au maximum ; rupture libre avec 7 jours de préavis pendant l'essai. Le préavis d'essai peut se terminer après la fin de l'essai (DÉCIDÉ).
 
 ### Rupture
-- **P4. Liberté de résiliation des deux parties, sans motif** (DÉCIDÉ). Préavis progressif : 30 jours la 1ʳᵉ année, 60 jours de la 2ᵉ à la 9ᵉ, 90 jours ensuite (`relative`). Il court à partir du lendemain de la réception de la notification (DÉCIDÉ).
+- **P4. Liberté de résiliation des deux parties, sans motif** (DÉCIDÉ). Préavis progressif : 30 jours la 1ʳᵉ année, 60 jours de la 2ᵉ à la 9ᵉ, 90 jours ensuite (`relative`). Il court à partir du lendemain de la réception de la notification (DÉCIDÉ). Le préavis dû par l'employeur ne peut qu'être allongé, celui dû par le salarié qu'être raccourci (DÉCIDÉ).
 - **P5. Motivation sur demande.** C'est une simple information, pas une condition de validité.
 - **P6. Indemnité de rupture** (DÉCIDÉ).
 
@@ -92,7 +97,7 @@
 
 ### Salaire et collectif
 - **P14. Pas de salaire minimum** (DÉCIDÉ). Le salaire est librement convenu et payé au moins une fois par mois.
-- **P15. Primauté de l'accord d'entreprise** sur toute disposition `dispositive`.
+- **P15. Primauté de l'accord d'entreprise** sur toute disposition `dispositive` (DÉCIDÉ) : l'accord d'entreprise l'emporte sur le contrat, le contrat sur la loi. Il s'impose donc aussi au contrat individuel.
 - **P16. Principes généraux** (non-discrimination, santé et sécurité, liberté syndicale), formulés comme invariants.
 
 ---
