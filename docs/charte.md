@@ -26,6 +26,8 @@
   - P11 : pause de 20 minutes ; la nuit s'entend de 21 h à 6 h.
   - P11 : le travailleur de nuit est limité à 8 h de travail effectif par journée. La règle « 8 h en moyenne par 24 h » était impliquée par le plafond de 48 h, donc sans effet (prouvé en Lean).
   - P13 : congés comptés en jours ouvrés : 20 jours par an, acquis à raison de 5/3 de jour par mois.
+  - P11 : la période de référence ne dépasse pas 26 semaines (6 mois), ce que la directive 2003/88 (art. 19) permet à un accord collectif sans autre condition.
+  - P9 bis : l'accord écrit et le décès sont des fins `absolue` ; un article sans niveau ne fait que définir une notion.
 
 ---
 
@@ -90,7 +92,7 @@
 ### Temps de travail (aligné sur la directive 2003/88, DÉCIDÉ)
 - **P10. Pas de durée légale.** Seule la durée contractuelle existe.
 - **P11. Plafonds de santé** (`absolue`, sauf la pause, `relative`) :
-  - 48 h en moyenne par semaine civile, heures supplémentaires comprises, sur une période de référence de 17 semaines (4 mois). Seul un accord d'entreprise peut la modifier, dans la limite de 52 semaines (`dispositive`). Pas d'opt-out individuel (DÉCIDÉ).
+  - 48 h en moyenne par semaine civile, heures supplémentaires comprises, sur une période de référence de 17 semaines (4 mois). Seul un accord d'entreprise peut la modifier, dans la limite de 26 semaines, soit 6 mois (`dispositive`). Au-delà, la directive (art. 19) exige des raisons objectives ou techniques : le code ne l'ouvre pas. Pas d'opt-out individuel (DÉCIDÉ).
   - 11 h de repos consécutives entre deux journées de travail ; une journée s'étend donc sur 13 h au plus.
   - Repos hebdomadaire de 35 h consécutives par semaine civile (24 h cumulées avec les 11 h de repos quotidien).
   - Une pause de 20 minutes au moins avant 6 h de travail d'affilée (DÉCIDÉ). `relative` : une pause plus longue est plus favorable.

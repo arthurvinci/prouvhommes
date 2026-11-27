@@ -17,7 +17,7 @@ planning concret (`decide`).
   consécutives (24 h + 11 h) ;
 * `pauses` : on ne travaille jamais 6 h sans une pause d'au moins 20 minutes ;
 * `moyenne48h` : 48 h en moyenne par semaine sur chaque période de référence
-  (17 semaines, jusqu'à 52 par accord d'entreprise) ;
+  (17 semaines, jusqu'à 26 par accord d'entreprise) ;
 * `nuit8h` : une journée d'un travailleur de nuit compte 8 h de travail au plus.
 
 Résultats principaux :
@@ -268,10 +268,11 @@ def reposHebdomadaire (p : Planning) : Bool :=
 def plafondHebdo : ℕ := 48 * 60
 
 /-- Période de référence, en semaines : dispositive, 17 semaines (4 mois) à
-défaut d'accord, 52 semaines au plus. Seul un accord d'entreprise peut
-l'allonger (le contrat n'est pas pris en compte). -/
+défaut d'accord, 26 semaines (6 mois) au plus, ce que la directive 2003/88
+(art. 19) permet à un accord collectif sans autre condition. Seul un accord
+d'entreprise peut l'allonger (le contrat n'est pas pris en compte). -/
 def dispPeriodeReference : Disposition ℕ :=
-  { niveau := .dispositive, loi := 17, sens := .plusPetit, limite := some 52 }
+  { niveau := .dispositive, loi := 17, sens := .plusPetit, limite := some 26 }
 
 /-- Période de référence applicable, en semaines (au moins 1). -/
 def periodeReference (accord : Option ℕ) : ℕ :=
@@ -288,8 +289,8 @@ def travailPeriode (n : ℕ) (p : Planning) (k : ℕ) : ℕ :=
 def moyenne48h (n : ℕ) (p : Planning) : Bool :=
   (List.range (nbPeriodes n p)).all fun k => decide (travailPeriode n p k ≤ plafondHebdo * n)
 
-theorem periodeReference_le_52 (accord : Option ℕ) : periodeReference accord ≤ 52 := by
-  have h : applicable dispPeriodeReference { accord := accord } ≤ 52 :=
+theorem periodeReference_le_26 (accord : Option ℕ) : periodeReference accord ≤ 26 := by
+  have h : applicable dispPeriodeReference { accord := accord } ≤ 26 :=
     applicable_dispositive_limite (d := dispPeriodeReference) rfl rfl { accord := accord }
   unfold periodeReference
   omega

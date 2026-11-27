@@ -154,10 +154,10 @@ namespace Prouvhommes
 /-- info: 'Prouvhommes.travail_continu_lt_6h' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms travail_continu_lt_6h
 
-/-! La période de référence ne dépasse jamais 52 semaines. -/
+/-! La période de référence ne dépasse jamais 26 semaines (6 mois). -/
 
-/-- info: 'Prouvhommes.periodeReference_le_52' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in #print axioms periodeReference_le_52
+/-- info: 'Prouvhommes.periodeReference_le_26' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms periodeReference_le_26
 
 /-! Un travailleur de nuit ne travaille jamais plus de 8 h dans une journée. -/
 
