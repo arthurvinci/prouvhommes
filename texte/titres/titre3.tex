@@ -1,0 +1,87 @@
+\section{Titre III --- Temps de travail et congés}
+
+\article{Durée du travail}\label{art:duree-travail}
+I. --- La durée du travail est celle que fixe le contrat. Il n'existe pas de
+durée légale du travail.
+
+II. --- Le temps de travail se compte en minutes de travail effectif. La semaine
+civile commence le lundi à zéro heure.
+\lean{Contrat.dureeHebdo}
+\lean{Planning}
+
+\article[absolue]{Durée maximale}\label{art:duree-max}
+La durée du travail, heures supplémentaires comprises, ne dépasse pas
+quarante-huit heures par semaine civile en moyenne sur chaque période de
+référence. Aucune dérogation individuelle n'est admise.
+\lean{moyenne48h}
+
+\article[dispositive]{Période de référence}
+La période de référence compte dix-sept semaines civiles. Par exception à
+l'article~\ref{art:dispositives}, seul un accord d'entreprise peut la modifier,
+dans la limite absolue de cinquante-deux semaines.
+\lean{dispPeriodeReference}
+\lean{periodeReference}
+\theoreme{periodeReference_le_52}
+
+\article[absolue]{Repos quotidien}
+Deux journées de travail sont séparées par un repos d'au moins onze heures
+consécutives. Une journée de travail s'étend sur treize heures au plus.
+\lean{reposQuotidien}
+\theoreme{travail_journee_le_13h}
+
+\article[absolue]{Repos hebdomadaire}
+Chaque semaine civile comporte un repos d'au moins trente-cinq heures
+consécutives.
+\lean{reposHebdomadaire}
+
+\article[relative]{Pause}
+Le salarié ne travaille jamais six heures d'affilée sans une pause d'au moins
+vingt minutes.
+\lean{pauses}
+\lean{dispPause}
+\theoreme{travail_continu_lt_6h}
+
+\article[absolue]{Travail de nuit}
+I. --- Le travail de nuit est le travail accompli entre vingt et une heures
+et six heures.
+
+II. --- Est travailleur de nuit le salarié qui accomplit au moins trois heures
+de travail de nuit, au moins deux nuits d'une même semaine civile.
+
+III. --- La durée du travail du travailleur de nuit ne dépasse pas huit heures
+par vingt-quatre heures en moyenne sur chaque période de référence.
+\lean{travailleurDeNuit}
+\lean{nuit8h}
+\theoreme{nuit8h_de_moyenne48h}
+% Telle qu'écrite, la règle III est impliquée par la durée maximale (48 h par
+% semaine, c'est moins de 8 h par 24 h) : voir le théorème cité.
+
+\article[dispositive]{Heures supplémentaires}
+I. --- Sont des heures supplémentaires les minutes de travail effectif qui
+dépassent, dans une semaine civile, la durée hebdomadaire convenue au contrat.
+
+II. --- Elles sont payées au taux horaire du contrat, majoré de dix pour cent.
+Le taux horaire est le salaire mensuel divisé par la durée mensuelle convenue,
+égale à la durée hebdomadaire multipliée par cinquante-deux et divisée par
+douze.
+
+III. --- La majoration ne peut être négative.
+\lean{heuresSup}
+\lean{paiementHS}
+\lean{dispMajorationHS}
+\theoreme{majorationHS_nonneg}
+\theoreme{paiementHS_ge_normal}
+
+\article[relative]{Congés payés}\label{art:conges}
+Le salarié acquiert vingt jours ouvrés de congés payés par année de travail,
+à raison de cinq tiers de jour par mois.
+\lean{congesAcquis}
+\lean{dispCongesAnnuels}
+\theoreme{congesAcquis_annee}
+\theoreme{conges_ge_legal}
+
+\article[absolue]{Interdiction du rachat des congés}
+Les congés payés ne peuvent être remplacés par une indemnité, sauf à la fin du
+contrat pour les jours acquis et non pris.
+\lean{indemniteCompensatrice}
+\theoreme{pas_de_rachat_conges}

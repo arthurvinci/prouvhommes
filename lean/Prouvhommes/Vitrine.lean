@@ -2,6 +2,9 @@ import Prouvhommes.Preavis
 import Prouvhommes.Indemnite
 import Prouvhommes.Rupture
 import Prouvhommes.Hierarchie
+import Prouvhommes.TempsDeTravail
+import Prouvhommes.HeuresSup
+import Prouvhommes.Conges
 
 /-!
 # Vitrine
@@ -133,5 +136,47 @@ namespace Prouvhommes
 
 /-- info: 'Prouvhommes.dureeEssai_le_max' depends on axioms: [propext] -/
 #guard_msgs in #print axioms dureeEssai_le_max
+
+/-! ## Temps de travail et congés (P10 à P13) -/
+
+/-! Les journées de travail partitionnent le planning. -/
+
+/-- info: 'Prouvhommes.grouper_flatten' depends on axioms: [propext] -/
+#guard_msgs in #print axioms grouper_flatten
+
+/-! Avec le repos quotidien, aucune journée ne compte plus de 13 h de travail. -/
+
+/-- info: 'Prouvhommes.travail_journee_le_13h' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms travail_journee_le_13h
+
+/-! Avec les pauses, on ne travaille jamais 6 h d'affilée. -/
+
+/-- info: 'Prouvhommes.travail_continu_lt_6h' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms travail_continu_lt_6h
+
+/-! La période de référence ne dépasse jamais 52 semaines. -/
+
+/-- info: 'Prouvhommes.periodeReference_le_52' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms periodeReference_le_52
+
+/-! Telle qu'écrite, la règle de nuit est impliquée par celle des 48 h. -/
+
+/-- info: 'Prouvhommes.nuit8h_de_moyenne48h' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms nuit8h_de_moyenne48h
+
+/-! Une heure supplémentaire est payée au moins au taux normal. -/
+
+/-- info: 'Prouvhommes.paiementHS_ge_normal' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms paiementHS_ge_normal
+
+/-! Le droit à congés n'est jamais inférieur à 20 jours. -/
+
+/-- info: 'Prouvhommes.conges_ge_legal' depends on axioms: [propext] -/
+#guard_msgs in #print axioms conges_ge_legal
+
+/-! Pas de rachat des congés pendant le contrat. -/
+
+/-- info: 'Prouvhommes.pas_de_rachat_conges' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms pas_de_rachat_conges
 
 end Prouvhommes

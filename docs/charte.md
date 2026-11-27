@@ -1,4 +1,4 @@
-# Charte des principes — Prouv'hommes (v0.7, brouillon)
+# Charte des principes — Prouv'hommes (v0.8, brouillon)
 
 > Objectif : un code du travail d'environ 50 pages, d'inspiration libérale, écrit dès le départ pour être formalisable en Lean 4.
 > Statut : document de travail. Les points marqués [À TRANCHER] restent à décider.
@@ -22,6 +22,9 @@
   - M4 : pour une disposition `relative`, on applique la valeur la plus favorable au salarié parmi la loi, l'accord d'entreprise et le contrat.
   - P15 : pour une disposition `dispositive`, l'accord d'entreprise l'emporte sur le contrat, qui l'emporte sur la loi.
   - P4 : « en faveur du salarié » s'apprécie dans chaque sens : le préavis dû par l'employeur ne peut qu'être allongé, celui dû par le salarié qu'être raccourci.
+  - P11 : pas d'opt-out individuel (art. 22 de la directive) : le plafond de 48 h est absolu.
+  - P11 : pause de 20 minutes ; la nuit s'entend de 21 h à 6 h.
+  - P13 : congés comptés en jours ouvrés : 20 jours par an, acquis à raison de 5/3 de jour par mois.
 
 ---
 
@@ -86,14 +89,13 @@
 ### Temps de travail (aligné sur la directive 2003/88, DÉCIDÉ)
 - **P10. Pas de durée légale.** Seule la durée contractuelle existe.
 - **P11. Plafonds de santé** (`absolue`) :
-  - 48 h en moyenne par période de 7 jours, heures supplémentaires comprises, sur une période de référence de 4 mois. Un accord collectif peut l'étendre à 6 mois, et à 12 mois au maximum.
+  - 48 h en moyenne par période de 7 jours, heures supplémentaires comprises, sur une période de référence de 4 mois. Un accord collectif peut l'étendre à 6 mois, et à 12 mois au maximum. Pas d'opt-out individuel (DÉCIDÉ).
   - 11 h de repos consécutives par 24 h.
   - Repos hebdomadaire de 24 h sans interruption, cumulé avec les 11 h de repos quotidien.
-  - Une pause dès que la journée dépasse 6 h.
-  - Travail de nuit : 8 h en moyenne par 24 h.
-  - [À TRANCHER] Ouvrir l'opt-out individuel permis par l'art. 22 de la directive ?
+  - Une pause de 20 minutes dès que le travail atteint 6 h (DÉCIDÉ).
+  - Travail de nuit : 8 h en moyenne par 24 h. La nuit s'entend de 21 h à 6 h (DÉCIDÉ).
 - **P12. Heures supplémentaires.** Au-delà de la durée contractuelle, majoration de 10 % par défaut (`dispositive`).
-- **P13. Congés.** 4 semaines payées par an, non remplaçables par une indemnité sauf à la fin du contrat (`absolue`).
+- **P13. Congés.** 4 semaines payées par an, soit 20 jours ouvrés, acquis à raison de 5/3 de jour par mois (DÉCIDÉ). Non remplaçables par une indemnité sauf à la fin du contrat (`absolue`).
 
 ### Salaire et collectif
 - **P14. Pas de salaire minimum** (DÉCIDÉ). Le salaire est librement convenu et payé au moins une fois par mois.

@@ -21,6 +21,10 @@ scoped notation "Mois" => ℕ
 avec un seul arrondi final au centime inférieur. M5. -/
 scoped notation "Centimes" => ℕ
 
+/-- Un instant, en minutes depuis une origine fixée (le lundi 0 h de la
+première semaine). M1. -/
+scoped notation "Minute" => ℕ
+
 /-- Les deux parties au contrat de travail. -/
 inductive Partie
   | employeur
