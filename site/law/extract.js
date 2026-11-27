@@ -61,23 +61,32 @@ export function readLeanDecls(leanDir) {
   const decls = new Map();
   for (const file of readdirSync(dir).filter((f) => f.endsWith(".lean"))) {
     const lines = readFileSync(join(dir, file), "utf8").split("\n");
+    const path = `lean/Prouvhommes/${file}`;
+    // Names are given without the root `Prouvhommes.` namespace, as in the text.
+    const namespaces = [];
     lines.forEach((line, i) => {
-      const m = line.match(/^(?:@\[[^\]]*\]\s*)?(?:noncomputable\s+)?(theorem|lemma|def|abbrev|inductive|structure|opaque)\s+([^\s:({]+)/);
+      const ns = line.match(/^namespace\s+(\S+)/);
+      if (ns) return void namespaces.push(ns[1]);
+      const end = line.match(/^end\s+(\S+)/);
+      if (end && namespaces.at(-1) === end[1]) return void namespaces.pop();
+
+      const m = line.match(/^(?:@\[[^\]]*\]\s*)?(?:noncomputable\s+)?(theorem|lemma|def|abbrev|inductive|structure|class|opaque)\s+([^\s:({]+)/);
       if (!m) return;
-      let end = i + 1;
-      while (end < lines.length && !/^\S/.test(lines[end]) && !(lines[end] === "" && /^\S/.test(lines[end + 1] ?? "x"))) end++;
+      let stop = i + 1;
+      while (stop < lines.length && !/^\S/.test(lines[stop]) && !(lines[stop] === "" && /^\S/.test(lines[stop + 1] ?? "x"))) stop++;
+      const prefix = namespaces.filter((n) => n !== "Prouvhommes").join(".");
       const decl = {
-        name: m[2],
+        name: prefix ? `${prefix}.${m[2]}` : m[2],
         kind: m[1],
-        file: `lean/Prouvhommes/${file}`,
+        file: path,
         line: i + 1,
         doc: docBefore(lines, i),
-        source: lines.slice(i, end).join("\n").trimEnd(),
+        source: lines.slice(i, stop).join("\n").trimEnd(),
         parent: null,
       };
       decls.set(decl.name, decl);
-      if (decl.kind === "structure" || decl.kind === "inductive") {
-        for (const member of readMembers(lines, i, end, decl)) decls.set(member.name, member);
+      if (decl.kind === "structure" || decl.kind === "class" || decl.kind === "inductive") {
+        for (const member of readMembers(lines, i, stop, decl)) decls.set(member.name, member);
       }
     });
   }

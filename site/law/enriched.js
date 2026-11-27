@@ -6,6 +6,9 @@
 // `{{ref:label}}` becomes a link to that article, with its current number.
 // An article without an entry here is rendered from its LaTeX as it is.
 //
+// `sourceHash` fingerprints the LaTeX the copy was made from: when the text
+// changes, the build warns and prints the new fingerprint (see render.js).
+//
 // `links` maps each key to a regular expression matched against the Lean
 // source shown beside the article.
 
@@ -14,11 +17,15 @@ const PARAM_LINK = { capMonths: "cap", saturationMonths: "saturation", windowSiz
 const live = (param, text) =>
   `<button type="button" class="live-number link" data-param="${param}" data-link="${PARAM_LINK[param]}">${text}</button>`;
 
+// Open notions (M2): phrase in the text → Lean predicate left to the judge.
+// Every article draws them as holes, in the text and in the Lean code.
+export const OPEN_NOTIONS = {
+  "juste motif": "Interpretation.justeMotif",
+};
+
 export const ENRICHED = {
   "art:indemnite": {
-    // The extracted check: if the LaTeX changes, the build warns that this
-    // annotated copy needs a look (see render.js).
-    source: "I. --- En cas de résiliation ordinaire du contrat par l'employeur",
+    sourceHash: "5397499dea8b",
     leanDecls: [
       "indemniteRupture", "indemniteDue", "indemnite", "indemniteQ", "coefficient",
       "fractionAnciennete", "plafondMois", "ancienneteSaturation", "smoothstep",
@@ -40,15 +47,15 @@ export const ENRICHED = {
   <span class="formula-main"><var>I</var> = <span class="link" data-link="floor">⌊</span> <span class="link" data-link="sr"><var>SR</var></span> × ${live("capMonths", "6")} × <span class="link" data-link="smoothstep"><var>S</var></span><span class="paren">(</span><span class="frac"><span><span class="link" data-link="seniority">min(<var>m</var>, ${live("saturationMonths", "240")})</span></span><span>${live("saturationMonths", "240")}</span></span><span class="paren">)</span> <span class="link" data-link="floor">⌋</span></span>
   <span class="formula-aside">avec <span class="link" data-link="smoothstep"><var>S</var>(<var>t</var>) = 3<var>t</var><sup>2</sup> − 2<var>t</var><sup>3</sup></span></span>
 </div>
-<p>où <span class="link" data-link="sr"><var>SR</var></span> est le salaire de référence défini à l'article&nbsp;{{ref:art:salaire-reference}} et <span class="link" data-link="seniority"><var>m</var> l'ancienneté du salarié en mois révolus</span> à la fin du contrat. Le montant est <span class="link" data-link="floor">arrondi au centime d'euro inférieur</span>. Aucun calcul intermédiaire n'est arrondi.</p>
-<p><span class="para">III. —</span> <span class="link" data-link="notDue">L'indemnité n'est due ni en cas de démission, ni en cas de rupture pendant la période d'essai, ni en cas de résiliation immédiate pour <span class="open-notion">juste motif</span></span>.</p>
+<p>où <span class="link" data-link="sr"><var>SR</var></span> est le salaire de référence défini à l'article&nbsp;{{ref:art:salaire-reference}} et <span class="link" data-link="seniority"><var>m</var> l'ancienneté du salarié en mois révolus</span> au dernier jour du contrat (article&nbsp;{{ref:art:delais}}). Le montant est <span class="link" data-link="floor">arrondi au centime d'euro inférieur</span>. Aucun calcul intermédiaire n'est arrondi.</p>
+<p><span class="para">III. —</span> <span class="link" data-link="notDue">L'indemnité n'est due ni en cas de démission, ni en cas de rupture pendant la période d'essai, ni en cas de résiliation immédiate pour <span class="open-notion">juste motif</span>, ni en cas d'accord écrit des parties ou de décès du salarié</span>.</p>
 `,
     // Replaces the LaTeX table: simulator, curve and live values table.
     extra: "severance-simulator",
   },
 
   "art:salaire-reference": {
-    source: "I. --- Le salaire mensuel est la rémunération brute totale",
+    sourceHash: "91633a621501",
     leanDecls: ["salaireReference", "fenetre", "moisPayes", "tailleFenetre", "ema", "pasEMA", "alphaSR"],
     links: {
       unpaid: String.raw`filter \(· ≠ 0\)|moisPayes`,

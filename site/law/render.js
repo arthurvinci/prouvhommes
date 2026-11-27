@@ -1,7 +1,8 @@
 // Renders the law into static HTML at build time, so the reader works
 // without JavaScript; src/ only adds interactivity on top.
 
-import { ENRICHED } from "./enriched.js";
+import { createHash } from "node:crypto";
+import { ENRICHED, OPEN_NOTIONS } from "./enriched.js";
 import { proofStatus } from "./extract.js";
 
 const REPO = "https://github.com/arthurvinci/prouvhommes/blob/main";
@@ -63,8 +64,11 @@ export function renderPromises(law) {
 
 function renderArticle(a, law, warn) {
   const enriched = a.label ? ENRICHED[a.label] : undefined;
-  if (enriched && !a.body.includes(enriched.source)) {
-    warn(`[law] ${a.label}: the LaTeX changed; check site/law/enriched.js still matches it.`);
+  if (enriched && enriched.sourceHash !== sourceHash(a.body)) {
+    warn(
+      `[law] ${a.label}: the LaTeX changed since site/law/enriched.js was annotated. ` +
+        `Update the annotated copy, then set sourceHash to "${sourceHash(a.body)}".`,
+    );
   }
   const body = enriched ? resolveRefs(enriched.body, law) : latexToHtml(a.body, law);
   const declNames = enriched?.leanDecls ?? a.lean;
@@ -147,11 +151,14 @@ function renderDecl(group) {
 const LEAN_KEYWORDS = new Set(["def", "theorem", "lemma", "abbrev", "inductive", "structure", "opaque",
   "if", "then", "else", "fun", "match", "with", "by", "let", "have", "show", "where", "deriving"]);
 
-/** Minimal Lean highlighting: comments, docstrings and keywords. */
+const OPEN_NOTION_FIELDS = new Set(Object.values(OPEN_NOTIONS).map((n) => n.split(".").at(-1)));
+
+/** Minimal Lean highlighting: comments, docstrings, keywords, open notions. */
 export function highlightLean(src) {
   return src.replace(/(\/-[\s\S]*?-\/|--[^\n]*)|([A-Za-z_][\w']*)|([\s\S])/g, (m, comment, word) => {
     if (comment) return `<span class="lean-comment">${escapeHtml(comment)}</span>`;
     if (word && LEAN_KEYWORDS.has(word)) return `<span class="lean-kw">${word}</span>`;
+    if (word && OPEN_NOTION_FIELDS.has(word)) return `<span class="open-notion">${word}</span>`;
     return escapeHtml(m);
   });
 }
@@ -176,10 +183,32 @@ export function latexToHtml(tex, law) {
         .replace(/---/g, "—")
         .replace(/--/g, "–")
         .replace(/~/g, "&nbsp;")
-        .replace(/\\ref\{([^}]+)\}/g, (_, label) => refLink(label, law));
-      return html.startsWith("<code") ? `<p class="math-block">${html}</p>` : `<p>${html}</p>`;
+        .replace(/\\ref\{([^}]+)\}/g, (_, label) => refLink(label, law))
+        .replace(/\\(?:emph|textit)\{([^}]*)\}/g, "<em>$1</em>")
+        .replace(/\\textbf\{([^}]*)\}/g, "<strong>$1</strong>")
+        .replace(/\s*\\begin\{(itemize|enumerate)\}\s*/g, (_, k) => `</p><${k === "itemize" ? "ul" : "ol"}>`)
+        .replace(/\s*\\end\{(itemize|enumerate)\}\s*/g, (_, k) => `</${k === "itemize" ? "ul" : "ol"}><p>`)
+        .replace(/\s*\\item\s+/g, "<li>");
+      html = markOpenNotions(html);
+      const block = html.startsWith("<code") ? `<p class="math-block">${html}</p>` : `<p>${html}</p>`;
+      return block.replace(/<p>\s*<\/p>/g, "");
     })
     .join("\n");
+}
+
+/** Fingerprint of an article's LaTeX, whitespace-insensitive. */
+export const sourceHash = (tex) =>
+  createHash("sha256").update(tex.replace(/\s+/g, " ").trim()).digest("hex").slice(0, 12);
+
+/** Draws each open notion (M2) as a hole, linked to its Lean predicate. */
+function markOpenNotions(html) {
+  for (const [phrase, lean] of Object.entries(OPEN_NOTIONS)) {
+    html = html.replace(
+      new RegExp(`(?<![\\p{L}])${phrase}(?![\\p{L}])`, "gu"),
+      `<span class="open-notion" title="Notion ouverte, appréciée par le juge (${lean})">${phrase}</span>`,
+    );
+  }
+  return html;
 }
 
 function resolveRefs(html, law) {

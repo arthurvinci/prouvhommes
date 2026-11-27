@@ -85,6 +85,12 @@ const CHECKS = {
     };
   },
 
+  // Agreements and contracts can only raise the severance (P15).
+  indemnite_ge_legal: () => ({
+    state: "unaffected",
+    text: "Ne dépend d'aucun seuil : un accord ou le contrat ne peut que relever l'indemnité.",
+  }),
+
   indemniteRupture_eq_zero: () => ({
     state: "unaffected",
     text: "Ne dépend d'aucun seuil : elle reste prouvée.",

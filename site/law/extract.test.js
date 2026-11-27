@@ -3,6 +3,8 @@
 import { describe, expect, test } from "vitest";
 import { fileURLToPath } from "node:url";
 import { proofStatus, readLaw } from "./extract.js";
+import { ENRICHED } from "./enriched.js";
+import { sourceHash } from "./render.js";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const { articles, decls, showcase } = readLaw(repoRoot);
@@ -50,6 +52,16 @@ describe("law extraction", () => {
 
     // `deriving` clauses are not constructors.
     expect(decls.has("CauseFin.deriving")).toBe(false);
+  });
+
+  // Fails when the other side edits an annotated article: update the copy in
+  // enriched.js, then its sourceHash.
+  test("annotated copies match the current LaTeX", () => {
+    for (const [label, entry] of Object.entries(ENRICHED)) {
+      const article = articles.find((a) => a.label === label);
+      expect(article, label).toBeDefined();
+      expect(sourceHash(article.body), label).toBe(entry.sourceHash);
+    }
   });
 
   test("showcase theorems are proved and carry a summary", () => {
