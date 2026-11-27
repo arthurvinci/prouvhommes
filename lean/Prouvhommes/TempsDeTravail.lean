@@ -18,7 +18,7 @@ planning concret (`decide`).
 * `pauses` : on ne travaille jamais 6 h sans une pause d'au moins 20 minutes ;
 * `moyenne48h` : 48 h en moyenne par semaine sur chaque période de référence
   (17 semaines, jusqu'à 52 par accord d'entreprise) ;
-* `nuit8h` : un travailleur de nuit travaille 8 h en moyenne par 24 h au plus.
+* `nuit8h` : une journée d'un travailleur de nuit compte 8 h de travail au plus.
 
 Résultats principaux :
 * `grouper_flatten` : les journées (et les blocs de travail continu)
@@ -27,8 +27,12 @@ Résultats principaux :
   plus de 13 h de travail effectif ;
 * `travail_continu_lt_6h` : avec les pauses, aucun bloc de travail continu
   n'atteint 6 h ;
-* `nuit8h_de_moyenne48h` : sur une même période de référence, la règle des 48 h
-  implique celle des 8 h de nuit (elle est donc redondante).
+* `travail_nuit_journee_le_8h` : un travailleur de nuit ne travaille jamais
+  plus de 8 h dans une journée ;
+* `reposQuotidien_independant`, `reposHebdomadaire_independant`,
+  `pauses_independantes`, `moyenne48h_independante`, `nuit8h_independante` :
+  **chaque règle a un sens**. Pour chacune, un planning respecte toutes les
+  autres mais pas celle-là : aucune n'est impliquée par les autres.
 -/
 
 namespace Prouvhommes
@@ -307,31 +311,26 @@ même semaine. -/
 def travailleurDeNuit (p : Planning) : Bool :=
   (List.range (nbSemaines p)).any fun k => decide (2 ≤ nuitsTravaillees p k)
 
-/-- Plafond moyen du travailleur de nuit, en minutes par 24 h : 8 h. -/
-def plafondNuitJour : ℕ := 8 * 60
+/-- Plafond quotidien du travailleur de nuit, en minutes : 8 h de travail
+effectif par journée. -/
+def plafondNuitJournee : ℕ := 8 * 60
 
-/-- **Travail de nuit** (P11) : un travailleur de nuit travaille 8 h en moyenne
-par 24 h au plus, sur chaque période de référence. -/
-def nuit8h (n : ℕ) (p : Planning) : Bool :=
-  !travailleurDeNuit p ||
-    (List.range (nbPeriodes n p)).all fun k =>
-      decide (travailPeriode n p k ≤ plafondNuitJour * 7 * n)
+/-- **Travail de nuit** (P11) : une journée de travail d'un travailleur de nuit
+compte 8 h de travail effectif au plus.
 
-/-- **Redondance.** Sur une même période de référence, la règle des 48 h
-implique celle des 8 h de nuit : 48 h par semaine, c'est moins de 8 h par
-24 h. Telle qu'écrite, la règle de nuit n'ajoute donc rien. -/
-theorem nuit8h_de_moyenne48h {n : ℕ} {p : Planning} (h : moyenne48h n p = true) :
-    nuit8h n p = true := by
-  simp only [nuit8h, Bool.or_eq_true, Bool.not_eq_true']
-  right
-  simp only [moyenne48h] at h
-  rw [List.all_eq_true] at h ⊢
-  intro k hk
-  have h2 : travailPeriode n p k ≤ plafondHebdo * n := of_decide_eq_true (h k hk)
-  apply decide_eq_true
-  unfold plafondHebdo at h2
-  unfold plafondNuitJour
-  omega
+Une première version (« 8 h en moyenne par 24 h ») était impliquée par la règle
+des 48 h : 48 h par semaine, c'est moins de 8 h par 24 h. Elle ne protégeait
+donc rien. Le plafond quotidien, lui, n'est impliqué par aucune autre règle
+(`nuit8h_independante`). -/
+def nuit8h (p : Planning) : Bool :=
+  !travailleurDeNuit p || (journees p).all fun g => decide (duree g ≤ plafondNuitJournee)
+
+/-- Un travailleur de nuit ne travaille jamais plus de 8 h dans une journée. -/
+theorem travail_nuit_journee_le_8h {p : Planning} (hn : travailleurDeNuit p = true)
+    (h : nuit8h p = true) : ∀ g ∈ journees p, duree g ≤ plafondNuitJournee := by
+  simp only [nuit8h, hn, Bool.not_true, Bool.false_or] at h
+  intro g hg
+  exact of_decide_eq_true (List.all_eq_true.1 h g hg)
 
 /-! ## Conformité -/
 
@@ -339,7 +338,7 @@ theorem nuit8h_de_moyenne48h {n : ℕ} {p : Planning} (h : moyenne48h n p = true
 période de référence et une pause minimale donnée. -/
 def conforme (accordPeriode : Option ℕ) (pause : ℕ) (p : Planning) : Bool :=
   bienForme p && reposQuotidien p && reposHebdomadaire p && pauses pause p &&
-    moyenne48h (periodeReference accordPeriode) p && nuit8h (periodeReference accordPeriode) p
+    moyenne48h (periodeReference accordPeriode) p && nuit8h p
 
 /-- Conformité avec les valeurs légales. -/
 def conformeLegal (p : Planning) : Bool := conforme none dispPause.loi p
@@ -372,5 +371,57 @@ example : reposQuotidien [⟨instant 0 15 0, instant 0 23 0⟩, ⟨instant 1 7 0
 
 /-- 6 h de travail d'affilée : la pause manque. -/
 example : pauses 20 [⟨instant 0 8 0, instant 0 14 0⟩] = false := by decide
+
+/-! ## Chaque règle a un sens
+
+Pour chaque règle de santé, on exhibe un planning qui respecte toutes les
+autres règles, mais pas celle-là. Aucune règle n'est donc impliquée par les
+autres : chacune protège contre une situation que les autres laissent passer. -/
+
+/-- Toutes les règles de santé, avec les valeurs légales, sous forme de liste
+de booléens : bonne forme, repos quotidien, repos hebdomadaire, pauses,
+48 h en moyenne, travail de nuit. -/
+def regles (p : Planning) : List Bool :=
+  [bienForme p, reposQuotidien p, reposHebdomadaire p, pauses dispPause.loi p,
+    moyenne48h (periodeReference none) p, nuit8h p]
+
+/-- Fin à 23 h, reprise à 7 h le lendemain : seul le repos quotidien manque. -/
+def exempleReposQuotidien : Planning :=
+  [⟨instant 0 15 0, instant 0 20 0⟩, ⟨instant 0 20 20, instant 0 23 0⟩,
+    ⟨instant 1 7 0, instant 1 12 0⟩]
+
+theorem reposQuotidien_independant :
+    regles exempleReposQuotidien = [true, false, true, true, true, true] := by decide +kernel
+
+/-- Six journées de 7 h, du lundi au samedi (42 h) : du samedi 17 h au lundi
+0 h, il n'y a que 31 h de repos. Seul le repos hebdomadaire manque. -/
+def exempleReposHebdomadaire : Planning := (List.range 6).flatMap journee7h
+
+theorem reposHebdomadaire_independant :
+    regles exempleReposHebdomadaire = [true, true, false, true, true, true] := by decide +kernel
+
+/-- 8 h – 14 h d'affilée : seule la pause manque. -/
+def exemplePauses : Planning := [⟨instant 0 8 0, instant 0 14 0⟩]
+
+theorem pauses_independantes :
+    regles exemplePauses = [true, true, true, false, true, true] := by decide +kernel
+
+/-- 50 h par semaine pendant 17 semaines, repos et pauses respectés : seule la
+moyenne de 48 h est dépassée. -/
+def exempleMoyenne48h : Planning := semaines journee10h 17
+
+theorem moyenne48h_independante :
+    regles exempleMoyenne48h = [true, true, true, true, false, true] := by decide +kernel
+
+/-- Une nuit de 10 h : 21 h – 2 h, pause de 20 minutes, 2 h 20 – 7 h 20. -/
+def nuit10h (j : ℕ) : Planning :=
+  [⟨instant j 21 0, instant (j + 1) 2 0⟩, ⟨instant (j + 1) 2 20, instant (j + 1) 7 20⟩]
+
+/-- Quatre nuits de 10 h, du lundi soir au vendredi matin (40 h) : repos,
+pauses et 48 h respectés, mais un travailleur de nuit fait 10 h par journée. -/
+def exempleNuit : Planning := (List.range 4).flatMap nuit10h
+
+theorem nuit8h_independante :
+    regles exempleNuit = [true, true, true, true, true, false] := by decide +kernel
 
 end Prouvhommes

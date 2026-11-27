@@ -24,6 +24,7 @@
   - P4 : « en faveur du salarié » s'apprécie dans chaque sens : le préavis dû par l'employeur ne peut qu'être allongé, celui dû par le salarié qu'être raccourci.
   - P11 : pas d'opt-out individuel (art. 22 de la directive) : le plafond de 48 h est absolu.
   - P11 : pause de 20 minutes ; la nuit s'entend de 21 h à 6 h.
+  - P11 : le travailleur de nuit est limité à 8 h de travail effectif par journée. La règle « 8 h en moyenne par 24 h » était impliquée par le plafond de 48 h, donc sans effet (prouvé en Lean).
   - P13 : congés comptés en jours ouvrés : 20 jours par an, acquis à raison de 5/3 de jour par mois.
 
 ---
@@ -93,7 +94,8 @@
   - 11 h de repos consécutives par 24 h.
   - Repos hebdomadaire de 24 h sans interruption, cumulé avec les 11 h de repos quotidien.
   - Une pause de 20 minutes dès que le travail atteint 6 h (DÉCIDÉ).
-  - Travail de nuit : 8 h en moyenne par 24 h. La nuit s'entend de 21 h à 6 h (DÉCIDÉ).
+  - Travail de nuit : 8 h de travail effectif par journée au plus pour le travailleur de nuit (DÉCIDÉ). La nuit s'entend de 21 h à 6 h (DÉCIDÉ). Une moyenne de 8 h par 24 h serait impliquée par le plafond de 48 h, donc sans effet.
+  - Chacune de ces règles est indépendante des autres : pour chacune, un planning respecte toutes les autres mais pas celle-là (prouvé en Lean).
 - **P12. Heures supplémentaires.** Au-delà de la durée contractuelle, majoration de 10 % par défaut (`dispositive`).
 - **P13. Congés.** 4 semaines payées par an, soit 20 jours ouvrés, acquis à raison de 5/3 de jour par mois (DÉCIDÉ). Non remplaçables par une indemnité sauf à la fin du contrat (`absolue`).
 

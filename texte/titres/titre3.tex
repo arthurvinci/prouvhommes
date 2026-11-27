@@ -14,6 +14,7 @@ La durée du travail, heures supplémentaires comprises, ne dépasse pas
 quarante-huit heures par semaine civile en moyenne sur chaque période de
 référence. Aucune dérogation individuelle n'est admise.
 \lean{moyenne48h}
+\theoreme{moyenne48h_independante}
 
 \article[dispositive]{Période de référence}
 La période de référence compte dix-sept semaines civiles. Par exception à
@@ -28,11 +29,13 @@ Deux journées de travail sont séparées par un repos d'au moins onze heures
 consécutives. Une journée de travail s'étend sur treize heures au plus.
 \lean{reposQuotidien}
 \theoreme{travail_journee_le_13h}
+\theoreme{reposQuotidien_independant}
 
 \article[absolue]{Repos hebdomadaire}
 Chaque semaine civile comporte un repos d'au moins trente-cinq heures
 consécutives.
 \lean{reposHebdomadaire}
+\theoreme{reposHebdomadaire_independant}
 
 \article[relative]{Pause}
 Le salarié ne travaille jamais six heures d'affilée sans une pause d'au moins
@@ -40,6 +43,7 @@ vingt minutes.
 \lean{pauses}
 \lean{dispPause}
 \theoreme{travail_continu_lt_6h}
+\theoreme{pauses_independantes}
 
 \article[absolue]{Travail de nuit}
 I. --- Le travail de nuit est le travail accompli entre vingt et une heures
@@ -48,13 +52,12 @@ et six heures.
 II. --- Est travailleur de nuit le salarié qui accomplit au moins trois heures
 de travail de nuit, au moins deux nuits d'une même semaine civile.
 
-III. --- La durée du travail du travailleur de nuit ne dépasse pas huit heures
-par vingt-quatre heures en moyenne sur chaque période de référence.
+III. --- Une journée de travail du travailleur de nuit compte huit heures de
+travail effectif au plus.
 \lean{travailleurDeNuit}
 \lean{nuit8h}
-\theoreme{nuit8h_de_moyenne48h}
-% Telle qu'écrite, la règle III est impliquée par la durée maximale (48 h par
-% semaine, c'est moins de 8 h par 24 h) : voir le théorème cité.
+\theoreme{travail_nuit_journee_le_8h}
+\theoreme{nuit8h_independante}
 
 \article[dispositive]{Heures supplémentaires}
 I. --- Sont des heures supplémentaires les minutes de travail effectif qui
