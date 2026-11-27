@@ -1,4 +1,4 @@
-# Charte des principes — Prouv'hommes (v0.5, brouillon)
+# Charte des principes — Prouv'hommes (v0.6, brouillon)
 
 > Objectif : un code du travail d'environ 50 pages, d'inspiration libérale, écrit dès le départ pour être formalisable en Lean 4.
 > Statut : document de travail. Les points marqués [À TRANCHER] restent à décider.
@@ -15,6 +15,10 @@
   - P6 : pas d'indemnité en cas de démission ni de résiliation immédiate pour juste motif.
   - P11 : temps de travail aligné sur la directive UE 2003/88.
   - P14 : suppression du salaire minimum.
+  - P4 : préavis comptés en jours : 30, 60 ou 90 jours (M1).
+  - P4 : le préavis court à partir du lendemain de la réception de la notification.
+  - P3 : une rupture notifiée pendant l'essai reste une rupture d'essai, même si ses 7 jours de préavis se terminent après la fin de l'essai.
+  - P1 : deux autres fins de la relation sont admises : l'accord écrit des parties et le décès du salarié.
 
 ---
 
@@ -49,14 +53,14 @@
 ## 2. Principes de fond
 
 ### Contrat
-- **P1. Contrat unique, sans terme** (DÉCIDÉ). Le contrat n'a qu'une seule forme. Aucune date de fin ne peut être convenue : la relation ne prend fin que par un préavis ou une résiliation immédiate pour juste motif.
+- **P1. Contrat unique, sans terme** (DÉCIDÉ). Le contrat n'a qu'une seule forme. Aucune date de fin ne peut être convenue à l'embauche : la relation ne prend fin que par un préavis, une résiliation immédiate pour juste motif, un accord écrit des parties ou le décès du salarié.
   - **Pas de préavis anticipé** (DÉCIDÉ). Le préavis ordinaire (P4) ne peut être notifié qu'après la fin de la période d'essai. Pendant l'essai, seule la rupture d'essai (P3) est possible.
-  - Théorème visé : toute relation qui survit à la période d'essai dure au moins *durée d'essai + 30 jours*, sauf résiliation immédiate pour juste motif.
+  - Théorème visé : toute relation qui survit à la période d'essai dure au moins *durée d'essai + 30 jours*, sauf résiliation immédiate pour juste motif, accord écrit ou décès.
 - **P2. Écrit minimal.** Le contrat écrit indique les parties, la date de début, la fonction, le salaire et la durée de travail convenue.
-- **P3. Période d'essai.** 1 mois par défaut, 3 mois au maximum ; rupture libre avec 7 jours de préavis pendant l'essai.
+- **P3. Période d'essai.** 30 jours par défaut, 90 jours au maximum ; rupture libre avec 7 jours de préavis pendant l'essai. Le préavis d'essai peut se terminer après la fin de l'essai (DÉCIDÉ).
 
 ### Rupture
-- **P4. Liberté de résiliation des deux parties, sans motif** (DÉCIDÉ). Préavis progressif : 1 mois la 1ʳᵉ année, 2 mois de la 2ᵉ à la 9ᵉ, 3 mois ensuite (`relative`).
+- **P4. Liberté de résiliation des deux parties, sans motif** (DÉCIDÉ). Préavis progressif : 30 jours la 1ʳᵉ année, 60 jours de la 2ᵉ à la 9ᵉ, 90 jours ensuite (`relative`). Il court à partir du lendemain de la réception de la notification (DÉCIDÉ).
 - **P5. Motivation sur demande.** C'est une simple information, pas une condition de validité.
 - **P6. Indemnité de rupture** (DÉCIDÉ).
 
@@ -72,6 +76,7 @@
 - **P7. Congé abusif = liste fermée de motifs interdits.** Sanction : indemnité forfaitaire plafonnée, sans réintégration.
 - **P8. Périodes de protection.** Congé nul pendant une incapacité ou une maternité ; un préavis en cours est suspendu.
 - **P9. Résiliation immédiate pour juste motif** (notion ouverte, M2).
+- **P9 bis. Autres fins de la relation** (DÉCIDÉ). Les parties peuvent mettre fin au contrat d'un commun accord, par écrit, sans préavis. Le contrat prend fin de plein droit au décès du salarié. Aucune de ces fins n'ouvre droit à l'indemnité de rupture (P6).
 
 ### Temps de travail (aligné sur la directive 2003/88, DÉCIDÉ)
 - **P10. Pas de durée légale.** Seule la durée contractuelle existe.

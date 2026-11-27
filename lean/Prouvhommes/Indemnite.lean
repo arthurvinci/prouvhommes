@@ -147,6 +147,8 @@ theorem indemniteDue_iff (c : CauseFin) :
   | ruptureEssai p => simp [indemniteDue]
   | resiliationOrdinaire p => cases p <;> simp [indemniteDue]
   | resiliationImmediate p => simp [indemniteDue]
+  | accordCommun => simp [indemniteDue]
+  | deces => simp [indemniteDue]
 
 /-- **Indemnité de rupture effectivement versée**, en centimes, à partir de
 l'historique des salaires mensuels, de l'ancienneté en mois et de la cause de
@@ -154,8 +156,8 @@ la fin du contrat. -/
 def indemniteRupture (h : List Centimes) (m : Mois) (c : CauseFin) : Centimes :=
   if indemniteDue c then indemnite (salaireReference h) m else 0
 
-/-- Pas d'indemnité en cas de démission, de rupture d'essai ou de résiliation
-immédiate pour juste motif. -/
+/-- Pas d'indemnité en cas de démission, de rupture d'essai, de résiliation
+immédiate pour juste motif, d'accord écrit ou de décès. -/
 theorem indemniteRupture_eq_zero {c : CauseFin} (hc : c ≠ .resiliationOrdinaire .employeur)
     (h : List Centimes) (m : Mois) : indemniteRupture h m c = 0 := by
   have : indemniteDue c = false := by

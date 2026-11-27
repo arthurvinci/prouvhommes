@@ -3,8 +3,14 @@ import Prouvhommes.Basic
 /-!
 # Préavis (P3, P4)
 
-Préavis ordinaire selon l'ancienneté (P4). Le préavis de rupture d'essai (P3)
-viendra en phase 3.
+* Préavis de rupture d'essai : 7 jours (P3).
+* Préavis ordinaire : 30, 60 ou 90 jours selon l'ancienneté (P4).
+
+Tous les préavis sont comptés en jours (M1) et courent à partir du lendemain
+de la réception de la notification.
+
+L'ancienneté est comptée en jours depuis le début du contrat ; une année
+révolue vaut 365 jours.
 -/
 
 namespace Prouvhommes
@@ -24,5 +30,25 @@ theorem preavisLegal_monotone : Monotone preavisLegal := by
   intro a b hab
   unfold preavisLegal
   split_ifs <;> omega
+
+/-- Préavis de rupture pendant la période d'essai, en jours (P3). -/
+def preavisEssai : ℕ := 7
+
+/-- Années révolues d'ancienneté au jour `j` (jour 0 = début du contrat). -/
+def anneesRevolues (j : Jour) : ℕ := j / 365
+
+/-- Mois révolus d'ancienneté au jour `j`, cohérents avec les années :
+`moisRevolus j / 12 = anneesRevolues j`. -/
+def moisRevolus (j : Jour) : Mois := 12 * j / 365
+
+theorem moisRevolus_div_douze (j : Jour) : moisRevolus j / 12 = anneesRevolues j := by
+  unfold moisRevolus anneesRevolues
+  omega
+
+/-- Préavis ordinaire, en jours, pour une notification reçue au jour `j` (P4). -/
+def preavisOrdinaire (j : Jour) : ℕ := preavisLegal (anneesRevolues j)
+
+theorem preavisOrdinaire_ge_30 (j : Jour) : 30 ≤ preavisOrdinaire j :=
+  preavisLegal_ge_30 _
 
 end Prouvhommes

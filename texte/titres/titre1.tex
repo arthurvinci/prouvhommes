@@ -3,6 +3,26 @@
 \article[absolue]{Forme unique}
 Le contrat de travail a une seule forme. Il est conclu sans détermination
 de durée. Toute clause fixant un terme est réputée non écrite.
+\lean{Contrat}
+\theoreme{pas_de_terme}
 
-% À rédiger : période d'essai, préavis, indemnité de rupture,
-% périodes de protection, résiliation immédiate, congé abusif.
+\article[relative]{Écrit}
+Le contrat est constaté par écrit. L'écrit indique les parties, la date de
+début, la fonction, le salaire mensuel et la durée de travail convenue.
+\lean{Contrat}
+
+\article[relative]{Période d'essai}\label{art:essai}
+I. --- Les trente premiers jours du contrat constituent une période d'essai.
+Le contrat peut la réduire, la supprimer ou la porter à quatre-vingt-dix jours
+au plus.
+
+II. --- Pendant la période d'essai, chaque partie peut mettre fin au contrat
+à tout moment, sans motif, avec un préavis de sept jours. Le préavis court
+même s'il se termine après la fin de la période d'essai.
+
+III. --- Aucune résiliation ordinaire au sens de l'article~\ref{art:resiliation}
+ne peut être notifiée avant la fin de la période d'essai.
+\lean{Contrat.dureeEssai}
+\lean{preavisEssai}
+\theoreme{fin_ruptureEssai}
+\theoreme{preavis_ordinaire_apres_essai}
