@@ -9,9 +9,10 @@ import { euros, eurosOfRational, parseEuros, seniority } from "../lib/format.js"
 
 const FIRED = { kind: "ordinaryTermination", party: "employer" };
 
-export function initManipulation(root) {
+/** `compact`: inside an article, without the weights chart (on `fullUrl`). */
+export function initManipulation(root, { compact = false, fullUrl } = {}) {
   root.innerHTML = `
-<h4 class="extra-title">Essayer : peut-on gonfler ou dégonfler l'indemnité ?</h4>
+<h2 class="extra-title">${compact ? "Essayer : peut-on gonfler ou dégonfler l'indemnité ?" : "Simulateur"}</h2>
 <p class="extra-lede">Un salarié payé le même salaire chaque mois est licencié. Juste avant, l'employeur baisse son dernier salaire (ou le salarié obtient une forte prime). Que devient l'indemnité ?</p>
 <div class="simulator">
   <form class="sim-controls" novalidate>
@@ -37,10 +38,14 @@ export function initManipulation(root) {
     <div><dt>Indemnité</dt><dd data-out="pay"></dd></div>
   </dl>
 </div>
-<figure class="chart">
+${
+  compact
+    ? `<p class="more"><a href="${fullUrl}">Voir le poids de chaque mois dans le salaire de référence</a></p>`
+    : `<figure class="chart">
   <figcaption data-out="weights-caption"></figcaption>
   <div class="chart-plot"><svg data-weights role="img"></svg><div class="chart-tooltip" data-tooltip hidden></div></div>
-</figure>`;
+</figure>`
+}`;
 
   const $ = (sel) => root.querySelector(sel);
   const usualInput = $("#manip-usual");
@@ -77,6 +82,7 @@ export function initManipulation(root) {
     const absDelta = delta < 0n ? -delta : delta;
     $('[data-out="pay"]').innerHTML = `${euros(payNew)} <span class="delta">${sign(payDelta)}${euros(payDelta)}, ${params.isLaw ? "borne prouvée" : "borne promise"} : moins de ${euros((absDelta + 3n) / 4n + 1n)}</span>`;
 
+    if (compact) return;
     renderWeights($("[data-weights]"), $("[data-tooltip]"), months, p.alpha);
     $('[data-out="weights-caption"]').textContent =
       `Poids de chacun des ${months} mois pris en compte dans le salaire de référence. Le dernier mois pèse 1/${p.alpha.d}.`;

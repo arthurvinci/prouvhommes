@@ -19,6 +19,22 @@
 | Démo anti-manipulation | Varier le dernier salaire : SR ne bouge que de Δ/24 |
 | Tableau des preuves | Promesses en français, statut (prouvé, `sorry`, à écrire), lien vers le théorème |
 
+## Structure du site (décidé le 27/11/2026)
+
+Une page d'accueil, puis quatre onglets.
+
+| Page | Adresse | Contenu |
+|---|---|---|
+| Accueil | `/` | Accroche, quatre portes d'entrée (une par onglet), quelques promesses choisies à la main |
+| Le code | `/code/` | Sommaire par titre : niveau d'impérativité et état de la formalisation de chaque article |
+| — un article | `/code/<label>/` | Les deux faces, les garanties, le simulateur lié en version courte, articles voisins. L'adresse vient du `\label` (`art:indemnite` → `/code/indemnite/`), elle survit à la renumérotation |
+| — texte intégral | `/code/texte-integral/` | Tous les articles à la suite, et le PDF |
+| Promesses | `/promesses/` | Compteurs, puis chaque théorème une seule fois, avec les articles qui le citent |
+| Simulateurs | `/simulateurs/`, `/simulateurs/<nom>/` | Chaque simulateur en version complète, avec ses seuils modifiables |
+| Méthode | `/methode/` | L'introduction du texte, lue depuis le LaTeX, puis la légende du site |
+
+Toutes les pages sont générées au build (`site/law/pages.js`) : un nouvel article a sa page sans qu'on ajoute de fichier. Une variante (`?plafond=7`) suit le lecteur de page en page.
+
 ## Style : Codex + chiffres suisses
 
 - **Texte de loi** : serif (Source Serif 4) sur fond papier.

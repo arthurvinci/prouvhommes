@@ -39,6 +39,8 @@ export function readArticles(textDir) {
         level: t[2] || null,
         label,
         id: label ? label.replace(/[^\w-]/g, "-") : `article-${number}`,
+        // Page address: from the label, so it survives renumbering.
+        slug: label ? label.replace(/^art:/, "") : slugify(t[3]),
         part,
         body: body.trim(),
         lean: macroArgs(body, "lean"),
@@ -115,18 +117,48 @@ export function readShowcase(leanDir) {
   return entries;
 }
 
-/** "proved" (pinned in Vitrine), "stated" (exists in Lean) or "missing". */
-export function proofStatus(name, decls, showcase) {
-  if (showcase.some((e) => e.name === name)) return "proved";
-  return decls.has(name) ? "stated" : "missing";
+/**
+ * "proved" or "missing". CI rejects any `sorry` or `admit` in lean/
+ * (scripts/check-sorry.sh), so a theorem present in Lean is proved; the
+ * showcase (Vitrine.lean) additionally pins its axioms.
+ */
+export const proofStatus = (name, decls) => (decls.has(name) ? "proved" : "missing");
+
+/**
+ * The introduction of texte/main.tex (no normative value), as sections:
+ * [{ title, body }], the first one untitled.
+ */
+export function readIntroduction(textDir) {
+  const main = stripComments(readFileSync(join(textDir, "main.tex"), "utf8"));
+  const start = main.indexOf("\\section*{Introduction}");
+  if (start < 0) return [];
+  const end = main.indexOf("\\input{", start);
+  const body = main
+    .slice(start + "\\section*{Introduction}".length, end < 0 ? undefined : end)
+    .replace(/\\addcontentsline\{[^}]*\}\{[^}]*\}\{[^}]*\}/g, "");
+  return body.split(/\\subsection\*\{([^}]*)\}/).reduce((sections, chunk, i) => {
+    if (i === 0) sections.push({ title: null, body: chunk.trim() });
+    else if (i % 2 === 1) sections.push({ title: chunk, body: "" });
+    else sections.at(-1).body = chunk.trim();
+    return sections;
+  }, []);
 }
 
 export function readLaw(repoRoot) {
   const articles = readArticles(join(repoRoot, "texte"));
   const decls = readLeanDecls(join(repoRoot, "lean"));
   const showcase = readShowcase(join(repoRoot, "lean"));
-  return { articles, decls, showcase };
+  const introduction = readIntroduction(join(repoRoot, "texte"));
+  return { articles, decls, showcase, introduction };
 }
+
+export const slugify = (s) =>
+  s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 
 function stripComments(tex) {
   return tex.replace(/(^|[^\\])%.*$/gm, "$1");
