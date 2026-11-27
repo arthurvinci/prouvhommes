@@ -27,7 +27,7 @@ export function initManipulation(root) {
     </div>
     <div class="field">
       <label for="manip-seniority">Ancienneté</label>
-      <input id="manip-seniority" class="slider" type="range" min="1" max="360" step="1" value="120" />
+      <input id="manip-seniority" class="slider" type="range" min="1" max="240" step="1" value="120" />
       <output for="manip-seniority" data-out="seniority"></output>
     </div>
   </form>
@@ -50,6 +50,7 @@ export function initManipulation(root) {
 
   function render() {
     const p = params.p6;
+    seniorityInput.max = String(p.saturationMonths); // clamps the value
     const pct = Number(lastInput.value); // last salary, in % of the usual one
     const last = (usual * BigInt(pct)) / 100n;
     const delta = last - usual;
@@ -62,7 +63,7 @@ export function initManipulation(root) {
     lastInput.style.setProperty("--fill", `${pct / 2}%`);
     $('[data-out="seniority"]').textContent = seniority(m);
     seniorityInput.setAttribute("aria-valuetext", seniority(m));
-    seniorityInput.style.setProperty("--fill", `${((m - 1) / 359) * 100}%`);
+    seniorityInput.style.setProperty("--fill", `${((m - 1) / (p.saturationMonths - 1)) * 100}%`);
 
     const srUsual = referenceSalary([...base, usual], p);
     const srNew = referenceSalary([...base, last], p);
