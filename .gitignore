@@ -22,11 +22,11 @@ _build/
 # Notes locales
 PLAN.md
 
-# Claude Code (worktrees et réglages locaux)
+# Claude Code (worktrees and local settings)
 .claude/worktrees/
 .claude/settings.local.json
 
-# Site
+# Website
 site/node_modules/
 site/dist/
 .vercel/
