@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Prouv'hommes — un code du travail prouvé</title>
+    <meta
+      name="description"
+      content="Un code du travail français radicalement simplifié, formalisé en Lean pour prouver ses propriétés."
+    />
+    <script>
+      // Appliqué avant le premier rendu pour éviter un flash de thème.
+      const t = localStorage.getItem("theme");
+      if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body>
+    <header class="entete">
+      <a class="marque" href="/">Prouv'hommes</a>
+      <button id="theme" type="button" class="bouton-theme" aria-pressed="false">
+        Thème sombre
+      </button>
+    </header>
+
+    <main>
+      <section class="accroche">
+        <p class="surtitre">Proposition de code du travail</p>
+        <h1>Des promesses, prouvées.</h1>
+        <p class="chapo">
+          Une cinquantaine d'articles, chacun doublé de sa formalisation en Lean.
+          Ce que le code promet, une machine le vérifie.
+        </p>
+      </section>
+
+      <section class="promesse" aria-labelledby="p6">
+        <div class="numero" aria-hidden="true">6</div>
+        <div>
+          <h2 id="p6">L'indemnité de rupture ne dépasse jamais six mois de salaire.</h2>
+          <p class="article">
+            Égale à <span class="lien">six mois</span> de salaire de référence,
+            pondérés selon l'ancienneté ; non due pour
+            <span class="trou">juste motif</span>.
+          </p>
+          <pre class="lean"><code>theorem indemnite_le_six : indemnite m sr ≤ 6 * sr</code></pre>
+          <p class="statut">Site en construction</p>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

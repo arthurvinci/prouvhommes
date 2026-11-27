@@ -16,6 +16,7 @@
 | `texte/` | Le texte du code, en LaTeX (un fichier par titre) |
 | `lean/` | La formalisation en Lean 4 + Mathlib : définitions et théorèmes |
 | `catala/` | La version exécutable en [Catala](https://catala-lang.org/), pour calculer des cas concrets |
+| `site/` | Le site web (Vite), déployé par Vercel ; conception dans [`docs/frontend.md`](docs/frontend.md) |
 
 ## Compiler
 
@@ -37,6 +38,16 @@ cd lean && lake build
 La compilation échoue si une preuve contient `sorry` (cf. `lean/Prouvhommes/Vitrine.lean` et `scripts/check-sorry.sh`). Pour passer à une version plus récente de Mathlib, lancer `./scripts/update-mathlib.sh` puis commiter les deux fichiers épinglés.
 
 **La version Catala** : à venir.
+
+**Le site web**
+
+Il faut Node 20 ou plus récent :
+
+```sh
+cd site && npm install && npm run dev
+```
+
+Chaque PR qui touche `site/` reçoit un aperçu Vercel ; `main` est le site en production.
 
 ## Méthode
 

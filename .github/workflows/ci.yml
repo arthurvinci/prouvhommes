@@ -1,8 +1,13 @@
 name: CI
 
+# Push sur main, et chaque PR. Sans « branches » sous push, une PR lançait
+# chaque job deux fois. Le site (site/) est construit par Vercel.
 on:
   push:
+    branches: [main]
+    paths-ignore: ['site/**', 'docs/**', '.claude/**']
   pull_request:
+    paths-ignore: ['site/**', 'docs/**', '.claude/**']
 
 jobs:
   texte:
