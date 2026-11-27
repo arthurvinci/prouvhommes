@@ -56,4 +56,17 @@ theorem smoothstep_mono {a b : ℚ} (ha : 0 ≤ a) (hab : a ≤ b) (hb : b ≤ 1
 theorem smoothstep_monotoneOn : MonotoneOn smoothstep (Set.Icc 0 1) :=
   fun _ ha _ hb hab => smoothstep_mono ha.1 hab hb.2
 
+/-- **Pente bornée.** `S(b) − S(a) ≤ (3/2)(b − a)` dès que `a ≤ b` : la pente de
+smoothstep ne dépasse jamais 3/2 (atteinte en `t = 1/2`). Sans analyse :
+`3/2 − 3(a + b) + 2(a² + ab + b²) = (3/2)(1 − a − b)² + (a − b)²/2 ≥ 0`. -/
+theorem smoothstep_sub_le {a b : ℚ} (hab : a ≤ b) :
+    smoothstep b - smoothstep a ≤ 3 / 2 * (b - a) := by
+  have hfact : smoothstep b - smoothstep a
+      = (b - a) * (3 * (a + b) - 2 * (a ^ 2 + a * b + b ^ 2)) := by
+    unfold smoothstep; ring
+  have h2 : 3 * (a + b) - 2 * (a ^ 2 + a * b + b ^ 2) ≤ 3 / 2 := by
+    nlinarith [sq_nonneg (1 - a - b), sq_nonneg (a - b)]
+  rw [hfact]
+  exact mul_le_mul_of_nonneg_left h2 (by linarith) |>.trans_eq (by ring)
+
 end Prouvhommes

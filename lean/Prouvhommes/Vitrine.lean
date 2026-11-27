@@ -5,6 +5,7 @@ import Prouvhommes.Hierarchie
 import Prouvhommes.TempsDeTravail
 import Prouvhommes.HeuresSup
 import Prouvhommes.Conges
+import Prouvhommes.Modele
 
 /-!
 # Vitrine
@@ -53,6 +54,11 @@ namespace Prouvhommes
 /-- info: 'Prouvhommes.indemnite_mono_anciennete' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms indemnite_mono_anciennete
 
+/-! Pas d'effet de seuil : un mois d'ancienneté de plus augmente l'indemnité de moins de 3/80 du salaire de référence, plus un centime. -/
+
+/-- info: 'Prouvhommes.indemnite_saut_mensuel' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms indemnite_saut_mensuel
+
 /-! ## Rupture (P1, P3, P4, P8, P9, P9 bis) -/
 
 /-! T-PREAVIS : toute fin est justifiée par un préavis couru, un juste motif, un accord écrit ou un décès. -/
@@ -60,7 +66,7 @@ namespace Prouvhommes
 /-- info: 'Prouvhommes.fin_justifiee' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms fin_justifiee
 
-/-! Une relation résiliée après l'essai dure au moins durée d'essai + 30 jours. -/
+/-! Un licenciement après l'essai laisse au moins durée d'essai + 30 jours, quels que soient l'accord d'entreprise et le contrat. -/
 
 /-- info: 'Prouvhommes.duree_minimale' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms duree_minimale
@@ -89,6 +95,23 @@ namespace Prouvhommes
 
 /-- info: 'Prouvhommes.protection_suspend' depends on axioms: [propext, Classical.choice] -/
 #guard_msgs in #print axioms protection_suspend
+
+/-! ## Modèle composé : conventions, rupture et indemnité ensemble -/
+
+/-! Pour l'employeur, faire signer un accord écrit au lieu de licencier met fin au contrat au moins 30 jours plus tôt, et sans indemnité. -/
+
+/-- info: 'Prouvhommes.accord_domine_licenciement' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms accord_domine_licenciement
+
+/-! Un licenciement reçu au jour 364 laisse 30 jours de préavis, reçu au jour 365 il en laisse 60 : un jour de retard allonge la relation de 31 jours. -/
+
+/-- info: 'Prouvhommes.seuil_preavis' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms seuil_preavis
+
+/-! La durée minimale ne vaut pas pour la démission : un contrat peut ramener le préavis du salarié à zéro. -/
+
+/-- info: 'Prouvhommes.demission_sans_duree_minimale' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms demission_sans_duree_minimale
 
 /-! ## Hiérarchie des normes (M4, P15) -/
 

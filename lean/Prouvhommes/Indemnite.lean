@@ -134,6 +134,38 @@ theorem indemnite_lipschitz {sr d : ℚ} (hsr : 0 ≤ sr) (hd : 0 ≤ d) (m : Mo
   unfold indemnite
   linarith
 
+/-- Un mois d'ancienneté de plus fait avancer la fraction d'au plus `1/240`. -/
+theorem fractionAnciennete_succ_le (m : Mois) :
+    fractionAnciennete (m + 1) ≤ fractionAnciennete m + 1 / 240 := by
+  unfold fractionAnciennete ancienneteSaturation
+  have : ((min (m + 1) 240 : ℕ) : ℚ) ≤ (min m 240 : ℕ) + 1 := by
+    exact_mod_cast (by omega : min (m + 1) 240 ≤ min m 240 + 1)
+  rw [div_add' _ _ _ (by norm_num), div_le_div_iff_of_pos_right (by norm_num)]
+  linarith
+
+/-- Un mois d'ancienneté de plus augmente le coefficient d'au plus
+`6 × 3/2 × 1/240 = 3/80` mois de salaire de référence. -/
+theorem coefficient_succ_le (m : Mois) : coefficient (m + 1) ≤ coefficient m + 3 / 80 := by
+  unfold coefficient plafondMois
+  have h1 := smoothstep_sub_le (fractionAnciennete_mono (Nat.le_succ m))
+  have h2 := fractionAnciennete_succ_le m
+  linarith
+
+/-- **Pas d'effet de seuil.** Un mois d'ancienneté de plus augmente l'indemnité
+de moins de `3/80` du salaire de référence (moins de 4 %), plus un centime
+d'arrondi. Il n'y a donc aucun mois où retarder ou avancer un licenciement
+change beaucoup l'indemnité, contrairement au préavis
+(`seuil_preavis`, dans `Modele.lean`). -/
+theorem indemnite_saut_mensuel {sr : ℚ} (hsr : 0 ≤ sr) (m : Mois) :
+    (indemnite sr (m + 1) : ℚ) < indemnite sr m + 3 / 80 * sr + 1 := by
+  have h := floor_lt_floor_add (indemniteQ_nonneg hsr (m + 1)) (indemniteQ sr m)
+  have hc : indemniteQ sr (m + 1) - indemniteQ sr m ≤ 3 / 80 * sr := by
+    unfold indemniteQ
+    have := mul_le_mul_of_nonneg_left (coefficient_succ_le m) hsr
+    nlinarith
+  unfold indemnite
+  linarith
+
 /-! ## Cas où l'indemnité est due -/
 
 /-- L'indemnité n'est due qu'en cas de résiliation ordinaire par l'employeur (P6). -/
