@@ -4,7 +4,7 @@
 
 import { params } from "../lib/params.js";
 import { coefficient, currentLawCoefficient, isSeveranceDue, severancePay } from "../lib/p6.js";
-import { toNumber, q } from "../lib/rational.js";
+import { toNumber } from "../lib/rational.js";
 import { decimal, euros, fraction, parseEuros, seniority } from "../lib/format.js";
 
 const CAUSES = [
@@ -16,19 +16,18 @@ const CAUSES = [
   ["death:", "Décès du salarié"],
 ];
 
-// What current French law and Swiss law do in the cases where this code
+// What current French law does in the cases where this code
 // owes nothing (shown instead of an all-zero chart).
 const NOT_DUE_NOTES = {
   mutualAgreement:
-    "Ce code ne prévoit pas d’indemnité en cas d’accord. En droit actuel, la rupture conventionnelle ouvre droit à une indemnité au moins égale à l’indemnité légale de licenciement (article L1237-13 du code du travail) ; le droit suisse n’en prévoit pas.",
+    "Ce code ne prévoit pas d’indemnité en cas d’accord. En droit actuel, la rupture conventionnelle ouvre droit à une indemnité au moins égale à l’indemnité légale de licenciement (article L1237-13 du code du travail).",
   default:
-    "Rien à comparer : dans ce cas, le droit actuel et le droit suisse ne prévoient pas non plus d’indemnité légale, quelle que soit l’ancienneté.",
+    "Rien à comparer : dans ce cas, le droit actuel ne prévoit pas non plus d’indemnité légale, quelle que soit l’ancienneté.",
 };
 
 const SERIES = [
   { key: "code", label: "Ce code", fn: (m) => coefficient(m, params.p6) },
   { key: "current", label: "Droit actuel", fn: currentLawCoefficient },
-  { key: "swiss", label: "Suisse", fn: () => q(0) },
 ];
 
 // The chart runs to 30 years at least, to compare with current law (no cap).
@@ -66,11 +65,11 @@ export function initSeverance(root, { compact = false, fullUrl } = {}) {
 <p class="note not-due" data-out="not-due" hidden></p>
 ${
   compact
-    ? `<p class="more"><a href="${fullUrl}">Voir la courbe et la comparaison avec le droit actuel et la Suisse</a></p>`
+    ? `<p class="more"><a href="${fullUrl}">Voir la courbe et la comparaison avec le droit actuel</a></p>`
     : `<figure class="chart" data-due-only>
   <figcaption>Indemnité selon l’ancienneté, en mois de salaire</figcaption>
   <ul class="legend">${SERIES.map((s) => `<li data-series="${s.key}"><span class="swatch" aria-hidden="true"></span>${s.label}</li>`).join("")}</ul>
-  <div class="chart-plot"><svg data-chart role="img" aria-label="Courbes de l’indemnité selon l’ancienneté : ce code, le droit actuel et la Suisse. Valeurs dans le tableau ci-dessous."></svg><div class="chart-tooltip" data-tooltip hidden></div></div>
+  <div class="chart-plot"><svg data-chart role="img" aria-label="Courbes de l’indemnité selon l’ancienneté : ce code et le droit actuel. Valeurs dans le tableau ci-dessous."></svg><div class="chart-tooltip" data-tooltip hidden></div></div>
 </figure>
 <div class="table-wrap" data-due-only>
   <table class="values">
@@ -79,7 +78,7 @@ ${
     <tbody data-out="table"></tbody>
   </table>
 </div>
-<p class="note">Le simulateur suppose un salaire constant : le salaire de référence est alors égal au salaire. Pour un salaire qui varie, voir le simulateur <a href="/simulateurs/anti-manipulation/">anti-manipulation</a>. Droit actuel : articles L1234-9 et R1234-2 du code du travail (1/4 de mois par année jusqu’à 10 ans, 1/3 au-delà, dès 8 mois d’ancienneté). Suisse : pas d’indemnité légale de licenciement, sauf cas particulier des salariés de 50 ans et plus.</p>`
+<p class="note">Le simulateur suppose un salaire constant : le salaire de référence est alors égal au salaire. Pour un salaire qui varie, voir le simulateur <a href="/simulateurs/anti-manipulation/">anti-manipulation</a>. Droit actuel : articles L1234-9 et R1234-2 du code du travail (1/4 de mois par année jusqu’à 10 ans, 1/3 au-delà, dès 8 mois d’ancienneté).</p>`
 }`;
 
   const $ = (sel) => root.querySelector(sel);

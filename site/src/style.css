@@ -19,7 +19,6 @@
   /* Chart series, validated with the dataviz palette checker on --paper. */
   --series-code: light-dark(#a3302b, #e0675c);
   --series-current: light-dark(#2a78d6, #3987e5);
-  --series-swiss: light-dark(#1baf7a, #199e70);
 
   --font-serif: "Source Serif 4 Variable", Georgia, serif;
   --font-sans: "Inter Tight Variable", system-ui, sans-serif;
@@ -596,7 +595,6 @@ h1.article-title { font-size: clamp(1.9rem, 1.4rem + 1.5vw, 2.5rem); }
 .swatch { display: inline-block; width: 0.9rem; height: 2px; margin-inline-end: 0.4rem; vertical-align: middle; background: var(--c); }
 [data-series="code"] { --c: var(--series-code); }
 [data-series="current"] { --c: var(--series-current); }
-[data-series="swiss"] { --c: var(--series-swiss); }
 
 .chart-plot { position: relative; }
 .chart svg { display: block; width: 100%; height: auto; overflow: visible; font-family: var(--font-sans); }
@@ -606,7 +604,6 @@ h1.article-title { font-size: clamp(1.9rem, 1.4rem + 1.5vw, 2.5rem); }
 .chart .series { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .chart .series-code { stroke: var(--series-code); }
 .chart .series-current { stroke: var(--series-current); }
-.chart .series-swiss { stroke: var(--series-swiss); }
 .chart .direct-label { fill: var(--ink); font-size: 12px; }
 .chart .marker { fill: var(--series-code); stroke: var(--paper-raised); stroke-width: 2; }
 .chart .crosshair { stroke: var(--ink-soft); stroke-width: 1; }

@@ -8,7 +8,7 @@ export const SIMULATORS = [
     extra: "severance-simulator",
     title: "Indemnité de rupture",
     question: "Combien touche un salarié licencié ?",
-    lede: "Selon son ancienneté et son salaire, comparé au droit actuel et au droit suisse.",
+    lede: "Selon son ancienneté et son salaire, comparé au droit actuel.",
     article: "art:indemnite",
     params: ["capMonths", "saturationMonths"],
   },
