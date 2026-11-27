@@ -1,11 +1,14 @@
-// Renders the law into static HTML at build time, so the reader works
-// without JavaScript; src/ only adds interactivity on top.
+// Renders the law into static HTML at build time, so every page works
+// without JavaScript; src/ only adds interactivity on top. Pages are
+// assembled in pages.js.
 
 import { createHash } from "node:crypto";
 import { ENRICHED, OPEN_NOTIONS } from "./enriched.js";
 import { proofStatus } from "./extract.js";
+import { SIMULATORS } from "./simulators.js";
 
-const REPO = "https://github.com/arthurvinci/prouvhommes/blob/main";
+export const REPO = "https://github.com/arthurvinci/prouvhommes";
+const BLOB = `${REPO}/blob/main`;
 
 const LEVELS = {
   absolue: ["absolue", "non dérogeable"],
@@ -15,21 +18,74 @@ const LEVELS = {
 
 const STATUS = {
   proved: "Prouvé en Lean",
-  stated: "Énoncé en Lean, preuve non épinglée",
   missing: "Absent de la formalisation",
 };
 
 export const escapeHtml = (s) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-/** Page sections: one per part ("Titre I — …"), each with its articles. */
-export function renderArticles(law, warn = console.warn) {
-  const parts = [];
+export const articleUrl = (a) => `/code/${a.slug}/`;
+
+/** Articles grouped by part ("Titre I — …"), in document order. */
+export function parts(law) {
+  const list = [];
   for (const a of law.articles) {
-    if (parts.at(-1)?.title !== a.part) parts.push({ title: a.part, articles: [] });
-    parts.at(-1).articles.push(a);
+    if (list.at(-1)?.title !== a.part) list.push({ title: a.part, articles: [] });
+    list.at(-1).articles.push(a);
   }
-  return parts
+  return list;
+}
+
+/* Le code ------------------------------------------------------------------- */
+
+/** Side navigation of the reader: every article, the current one marked. */
+export function renderToc(law, current) {
+  return parts(law)
+    .map(
+      (p) => `<p class="toc-part">${escapeHtml(p.title)}</p>
+<ol class="toc">${p.articles
+        .map(
+          (a) =>
+            `<li><a href="${articleUrl(a)}"${a === current ? ' aria-current="page"' : ""}><span class="toc-number">${a.number}</span> ${escapeHtml(a.title)}</a></li>`,
+        )
+        .join("")}</ol>`,
+    )
+    .join("\n");
+}
+
+/** /code/: the contents, with each article's level and formal status. */
+export function renderContents(law) {
+  return parts(law)
+    .map(
+      (p) => `<section class="contents-part" aria-labelledby="${slug(p.title)}">
+<h2 class="part-title" id="${slug(p.title)}">${escapeHtml(p.title)}</h2>
+<ol class="contents">${p.articles
+        .map((a) => {
+          const level = LEVELS[a.level];
+          return `<li><a class="contents-row" href="${articleUrl(a)}">
+  <span class="contents-number">${a.number}</span>
+  <span class="contents-title">${escapeHtml(a.title)}</span>
+  ${level ? `<span class="level" data-level="${a.level}"><span class="level-mark" aria-hidden="true"></span>${level[0]}</span>` : `<span class="level"></span>`}
+  <span class="contents-status">${formalStatus(a, law)}</span>
+</a></li>`;
+        })
+        .join("\n")}</ol>
+</section>`,
+    )
+    .join("\n");
+}
+
+function formalStatus(a, law) {
+  if (a.outsideFormalisation.length) return "Hors formalisation";
+  if (!a.lean.length && !a.theorems.length) return "Pas encore formalisé";
+  const proved = a.theorems.filter((t) => proofStatus(t, law.decls) === "proved").length;
+  if (!a.theorems.length) return "Formalisé";
+  return `${proved} garantie${proved > 1 ? "s" : ""} prouvée${proved > 1 ? "s" : ""}`;
+}
+
+/** /code/texte-integral/: every article, for continuous reading. */
+export function renderFullText(law, warn) {
+  return parts(law)
     .map(
       (p) => `<section class="law-part" aria-labelledby="${slug(p.title)}">
 <h2 class="part-title" id="${slug(p.title)}">${escapeHtml(p.title)}</h2>
@@ -39,30 +95,22 @@ ${p.articles.map((a) => renderArticle(a, law, warn)).join("\n")}
     .join("\n");
 }
 
-/** Table of contents for the reader. */
-export function renderToc(law) {
-  return `<ol class="toc">${law.articles
-    .map((a) => `<li><a href="#${a.id}"><span class="toc-number">${a.number}</span> ${escapeHtml(a.title)}</a></li>`)
-    .join("")}</ol>`;
+/** Previous and next article, at the bottom of an article page. */
+export function renderArticleNav(a, law) {
+  const i = law.articles.indexOf(a);
+  const link = (b, rel, label) =>
+    b
+      ? `<a class="article-nav-${rel}" href="${articleUrl(b)}" rel="${rel}"><span>${label}</span>Article ${b.number} · ${escapeHtml(b.title)}</a>`
+      : "<span></span>";
+  return `<nav class="article-nav" aria-label="Articles voisins">${link(law.articles[i - 1], "prev", "Précédent")}${link(law.articles[i + 1], "next", "Suivant")}</nav>`;
 }
 
-/** Home page: every pinned theorem, as a plain-language promise. */
-export function renderPromises(law) {
-  const items = law.showcase.map((entry) => {
-    const article = law.articles.find((a) => a.theorems.includes(entry.name));
-    const { tag, text } = splitSummary(promiseText(entry.name, law));
-    const where = article
-      ? `<a class="promise-article" href="/code/#${article.id}">Article ${article.number} · ${escapeHtml(article.title)}</a>`
-      : "";
-    return `<li class="promise-item">
-  <p class="promise-text">${text}</p>
-  <p class="promise-meta">${statusBadge("proved")}${tag ? `<span class="promise-tag">${tag}</span>` : ""}${where}</p>
-</li>`;
-  });
-  return `<ul class="promise-list">${items.join("\n")}</ul>`;
-}
-
-function renderArticle(a, law, warn) {
+/**
+ * One article: header, the two faces, its guarantees and, for an annotated
+ * article, a compact simulator linking to its full page.
+ * `standalone`: the article is the page (h1), rather than a section (h3).
+ */
+export function renderArticle(a, law, warn, { standalone = false } = {}) {
   const enriched = a.label ? ENRICHED[a.label] : undefined;
   if (enriched && enriched.sourceHash !== sourceHash(a.body)) {
     warn(
@@ -74,6 +122,8 @@ function renderArticle(a, law, warn) {
   const declNames = enriched?.leanDecls ?? a.lean;
   const decls = declNames.map((n) => law.decls.get(n)).filter(Boolean);
   const level = LEVELS[a.level];
+  const h = standalone ? "h1" : "h3";
+  const simulator = enriched?.extra && SIMULATORS.find((s) => s.extra === enriched.extra);
 
   return `<article class="law-article" id="${a.id}"${a.label ? ` data-label="${a.label}"` : ""}${
     enriched ? ` data-links="${escapeHtml(JSON.stringify(enriched.links))}"` : ""
@@ -81,7 +131,7 @@ function renderArticle(a, law, warn) {
 <header class="article-head">
   <span class="article-number" aria-hidden="true">${a.number}</span>
   <div>
-    <h3 class="article-title"><span class="visually-hidden">Article ${a.number} : </span>${escapeHtml(a.title)}</h3>
+    <${h} class="article-title"><span class="visually-hidden">Article ${a.number} : </span>${escapeHtml(a.title)}</${h}>
     ${level ? `<p class="level" data-level="${a.level}"><span class="level-mark" aria-hidden="true"></span>Impérativité ${level[0]} : ${level[1]}</p>` : ""}
   </div>
 </header>
@@ -94,32 +144,37 @@ function renderArticle(a, law, warn) {
     ${body}
   </section>
   <section class="face face-lean" data-face="lean" aria-label="Formalisation en Lean">
-    ${decls.length ? groupMembers(decls).map(renderDecl).join("\n") : `<p class="empty">${a.outsideFormalisation.length ? "Hors formalisation." : "Pas encore formalisé."}</p>`}
+    ${decls.length ? groupMembers(decls).map(renderDecl).join("\n") : `<p class="empty">${a.outsideFormalisation.length ? `Hors formalisation : ${escapeHtml(a.outsideFormalisation.join(" ; "))}.` : "Pas encore formalisé."}</p>`}
   </section>
 </div>
-${a.theorems.length ? renderGuarantees(a, law) : ""}
-${enriched?.extra ? `<div class="article-extra" data-extra="${enriched.extra}"></div>` : ""}
+${a.theorems.length ? renderGuarantees(a, law, standalone) : ""}
+${
+  simulator
+    ? `<div class="article-extra" data-extra="${simulator.extra}" data-compact data-full-url="/simulateurs/${simulator.slug}/"></div>`
+    : ""
+}
 </article>`;
 }
 
-function renderGuarantees(a, law) {
+function renderGuarantees(a, law, standalone) {
+  const h = standalone ? "h2" : "h4";
   const items = a.theorems.map((name) => {
-    const status = proofStatus(name, law.decls, law.showcase);
     const decl = law.decls.get(name);
     const { tag, text } = splitSummary(promiseText(name, law));
     return `<li class="guarantee" data-theorem="${name}">
   <p class="guarantee-text">${text}</p>
-  <p class="guarantee-meta">${statusBadge(status)}${tag ? `<span class="promise-tag">${tag}</span>` : ""}${
-      decl ? `<a href="${REPO}/${decl.file}#L${decl.line}"><code>${name}</code></a>` : `<code>${name}</code>`
-    }</p>
+  <p class="guarantee-meta">${statusBadge(proofStatus(name, law.decls))}${tag ? `<span class="promise-tag">${tag}</span>` : ""}${leanLink(name, decl)}</p>
   <p class="guarantee-check" data-check="${name}" aria-live="polite"></p>
 </li>`;
   });
   return `<section class="guarantees" aria-label="Ce que l'article garantit">
-<h4>Ce que l'article garantit</h4>
+<${h} class="guarantees-title">Ce que l'article garantit</${h}>
 <ul>${items.join("\n")}</ul>
 </section>`;
 }
+
+const leanLink = (name, decl) =>
+  decl ? `<a href="${BLOB}/${decl.file}#L${decl.line}"><code>${name}</code></a>` : `<code>${name}</code>`;
 
 /**
  * Consecutive fields or constructors of the same parent share one figure,
@@ -143,10 +198,86 @@ function renderDecl(group) {
     ? `${first.parent.header}\n  -- …\n${group.map((d) => withDoc(d, "  ")).join("\n")}`
     : withDoc(first, "");
   return `<figure class="lean-decl">
-<figcaption><a href="${REPO}/${first.file}#L${first.line}">${first.file.replace("lean/", "")}:${first.line}</a></figcaption>
+<figcaption><a href="${BLOB}/${first.file}#L${first.line}">${first.file.replace("lean/", "")}:${first.line}</a></figcaption>
 <pre><code>${highlightLean(src)}</code></pre>
 </figure>`;
 }
+
+/* Promesses ----------------------------------------------------------------- */
+
+/**
+ * Every theorem cited by the text, once, in document order, with the
+ * articles that cite it (a theorem can back several articles).
+ */
+export function allPromises(law) {
+  const byName = new Map();
+  for (const a of law.articles) {
+    for (const name of a.theorems) {
+      if (!byName.has(name)) byName.set(name, { name, articles: [], status: proofStatus(name, law.decls) });
+      byName.get(name).articles.push(a);
+    }
+  }
+  return [...byName.values()];
+}
+
+/** A list of promises as cards (home page, dashboard). */
+export function renderPromiseCards(promises, law) {
+  return `<ul class="promise-list">${promises
+    .map(({ name, articles, status }) => {
+      const { tag, text } = splitSummary(promiseText(name, law));
+      const links = articles
+        .map((a) => `<a class="promise-article" href="${articleUrl(a)}">Article ${a.number} · ${escapeHtml(a.title)}</a>`)
+        .join("");
+      return `<li class="promise-item">
+  <p class="promise-text">${text}</p>
+  <p class="promise-meta">${statusBadge(status)}${tag ? `<span class="promise-tag">${tag}</span>` : ""}${links}</p>
+</li>`;
+    })
+    .join("\n")}</ul>`;
+}
+
+/** /promesses/: counters, then the promises of each part. */
+export function renderDashboard(law) {
+  const all = allPromises(law);
+  const proved = all.filter((p) => p.status === "proved").length;
+  const formalised = law.articles.filter((a) => a.lean.length || a.theorems.length).length;
+  const outside = law.articles.filter((a) => a.outsideFormalisation.length).length;
+  const pending = law.articles.length - formalised - outside;
+  const stat = (value, label) => `<div class="stat"><dt>${label}</dt><dd>${value}</dd></div>`;
+  return `<dl class="stats">
+${stat(`${proved}<span class="stat-of"> / ${all.length}</span>`, "Promesses prouvées")}
+${stat(`${formalised}<span class="stat-of"> / ${law.articles.length}</span>`, "Articles formalisés")}
+${stat(outside, "Hors formalisation")}
+${stat(pending, "Pas encore formalisés")}
+</dl>
+${parts(law)
+  .map((p) => {
+    // Listed under the first article that cites it.
+    const promises = all.filter((x) => p.articles.includes(x.articles[0]));
+    if (!promises.length) return "";
+    return `<section class="dashboard-part" aria-labelledby="d-${slug(p.title)}">
+<h2 class="part-title" id="d-${slug(p.title)}">${escapeHtml(p.title)}</h2>
+${renderPromiseCards(promises, law)}
+</section>`;
+  })
+  .join("\n")}`;
+}
+
+/* Méthode ------------------------------------------------------------------- */
+
+/** The introduction of the text, as rendered sections. */
+export function renderIntroduction(law) {
+  return law.introduction
+    .map(
+      (s) => `<section class="method-section">
+${s.title ? `<h2>${escapeHtml(s.title)}</h2>` : ""}
+${latexToHtml(s.body, law)}
+</section>`,
+    )
+    .join("\n");
+}
+
+/* LaTeX and Lean ---------------------------------------------------------- */
 
 const LEAN_KEYWORDS = new Set(["def", "theorem", "lemma", "abbrev", "inductive", "structure", "opaque",
   "if", "then", "else", "fun", "match", "with", "by", "let", "have", "show", "where", "deriving"]);
@@ -163,7 +294,7 @@ export function highlightLean(src) {
   });
 }
 
-/** Converts the plain LaTeX of an article (no enriched copy) to HTML. */
+/** Converts plain LaTeX (an article without annotated copy, the introduction). */
 export function latexToHtml(tex, law) {
   const cleaned = tex
     .replace(/\\(lean|theoreme|horsformalisation)\{[^}]*\}/g, "")
@@ -173,6 +304,7 @@ export function latexToHtml(tex, law) {
     .split(/\n\s*\n|(?=(?:^|\n)\s*[IVX]+\. ---)/)
     .map((p) => p.trim())
     .filter(Boolean);
+  const LIST = { itemize: "ul", enumerate: "ol", description: "dl" };
   return paragraphs
     .map((p) => {
       let html = escapeHtml(p.replace(/\s+/g, " "));
@@ -184,10 +316,14 @@ export function latexToHtml(tex, law) {
         .replace(/--/g, "–")
         .replace(/~/g, "&nbsp;")
         .replace(/\\ref\{([^}]+)\}/g, (_, label) => refLink(label, law))
+        .replace(/\\textsc\{([^}]*)\}/g, '<span class="smallcaps">$1</span>')
+        .replace(/\\(?:textmd|textsf)\{([^}]*)\}/g, "$1")
+        .replace(/\\texttt\{([^}]*)\}/g, "<code>$1</code>")
         .replace(/\\(?:emph|textit)\{([^}]*)\}/g, "<em>$1</em>")
         .replace(/\\textbf\{([^}]*)\}/g, "<strong>$1</strong>")
-        .replace(/\s*\\begin\{(itemize|enumerate)\}\s*/g, (_, k) => `</p><${k === "itemize" ? "ul" : "ol"}>`)
-        .replace(/\s*\\end\{(itemize|enumerate)\}\s*/g, (_, k) => `</${k === "itemize" ? "ul" : "ol"}><p>`)
+        .replace(/\s*\\begin\{(itemize|enumerate|description)\}\s*/g, (_, k) => `</p><${LIST[k]}>`)
+        .replace(/\s*\\end\{(itemize|enumerate|description)\}\s*/g, (_, k) => `</${LIST[k]}><p>`)
+        .replace(/\s*\\item\[([^\]]*)\]\s*/g, "<dt>$1</dt><dd>")
         .replace(/\s*\\item\s+/g, "<li>");
       html = markOpenNotions(html);
       const block = html.startsWith("<code") ? `<p class="math-block">${html}</p>` : `<p>${html}</p>`;
@@ -217,7 +353,7 @@ function resolveRefs(html, law) {
 
 function refLink(label, law) {
   const target = law.articles.find((a) => a.label === label);
-  return target ? `<a href="#${target.id}">${target.number}</a>` : "?";
+  return target ? `<a href="${articleUrl(target)}">${target.number}</a>` : "?";
 }
 
 function promiseText(name, law) {
@@ -237,7 +373,7 @@ function splitSummary(summary) {
 
 const statusBadge = (status) => `<span class="status" data-status="${status}">${STATUS[status]}</span>`;
 
-const slug = (s) =>
+export const slug = (s) =>
   s
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")

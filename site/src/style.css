@@ -73,10 +73,30 @@ button, input, select { font: inherit; color: inherit; }
   font-family: var(--font-sans);
 }
 .brand { color: var(--ink); font-weight: 500; font-size: 1.125rem; text-decoration: none; }
-.site-header nav { display: flex; gap: 1.25rem; margin-inline-end: auto; font-size: 0.9375rem; }
-.site-header nav a { color: var(--ink-soft); text-decoration: none; }
-.site-header nav a:hover, .site-header nav a[aria-current="page"] { color: var(--ink); }
-.site-header nav a[aria-current="page"] { text-decoration: underline 2px var(--accent); text-underline-offset: 0.4em; }
+/* The four tabs. aria-current="page" on a tab's landing page, "true" on
+   the pages inside it (an article, a simulator). */
+.tabs { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; margin-inline-end: auto; font-size: 0.9375rem; }
+.tabs a { color: var(--ink-soft); text-decoration: none; padding-block: 0.25rem; }
+.tabs a:hover, .tabs a[aria-current] { color: var(--ink); }
+.tabs a[aria-current] { text-decoration: underline 2px var(--accent); text-underline-offset: 0.45em; }
+.brand[aria-current="page"] { color: var(--accent); }
+@media (width < 40rem) {
+  .site-header { flex-wrap: wrap; gap: 0.5rem 1rem; }
+  .tabs { order: 3; width: 100%; margin: 0; }
+  .theme-toggle { margin-inline-start: auto; }
+}
+.skip-link {
+  position: absolute;
+  inset-inline-start: 1rem;
+  top: -3rem;
+  padding: 0.4rem 0.8rem;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: var(--radius);
+  font-family: var(--font-sans);
+  z-index: 3;
+}
+.skip-link:focus { top: 0.5rem; }
 
 .theme-toggle {
   font-family: var(--font-sans);
@@ -202,8 +222,7 @@ var { font-style: italic; }
   .toc { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; }
 }
 
-.reader-intro { padding: 2.5rem 0 1rem; }
-.reader-intro h1 { font-size: 2.5rem; }
+.reader-main > h1 { font-size: 2.5rem; margin: 0.5rem 0 0; }
 
 .variant-banner {
   position: sticky;
@@ -254,6 +273,7 @@ var { font-style: italic; }
   font-variant-numeric: tabular-nums;
 }
 .article-title { font-size: 1.75rem; line-height: 1.2; margin: 0; }
+h1.article-title { font-size: clamp(1.9rem, 1.4rem + 1.5vw, 2.5rem); }
 .level {
   display: flex;
   align-items: center;
@@ -302,7 +322,7 @@ var { font-style: italic; }
 .para { font-family: var(--font-sans); font-size: 0.875rem; font-weight: 500; color: var(--ink-soft); }
 
 /* Linked phrase: quiet underline at rest, highlighted with its Lean pendant. */
-.face-law .link {
+.face-law .link, .link.sample {
   text-decoration: underline 1px var(--rule);
   text-underline-offset: 0.2em;
   cursor: default;
@@ -314,7 +334,7 @@ var { font-style: italic; }
 }
 
 /* Live threshold: dotted accent underline, opens the editor. */
-.face-law .live-number {
+.live-number {
   display: inline;
   padding: 0 0.1em;
   border: 0;
@@ -325,8 +345,8 @@ var { font-style: italic; }
   text-decoration: underline dotted 1.5px var(--accent);
   text-underline-offset: 0.22em;
 }
-.face-law .live-number:hover { color: var(--accent); }
-.face-law .live-number.is-variant { color: var(--accent); background: var(--variant-bg); border-radius: 3px; }
+.live-number:hover { color: var(--accent); }
+.live-number.is-variant { color: var(--accent); background: var(--variant-bg); border-radius: 3px; }
 
 /* Open notion: a hole the judge fills (M2). */
 .open-notion {
@@ -388,7 +408,7 @@ var { font-style: italic; }
 /* Guarantees -------------------------------------------------------------- */
 
 .guarantees { margin-top: 1.5rem; }
-.guarantees h4, .extra-title {
+.guarantees-title, .extra-title {
   font-family: var(--font-sans);
   font-size: 0.8125rem;
   letter-spacing: 0.08em;
@@ -588,5 +608,111 @@ var { font-style: italic; }
 .param-law { margin: 0.25rem 0 0; font-size: 0.8125rem; color: var(--ink-soft); }
 
 @media (prefers-reduced-motion: no-preference) {
-  .face-law .live-number, .face-switch button { transition: color 0.15s, background-color 0.15s; }
+  .live-number, .face-switch button { transition: color 0.15s, background-color 0.15s; }
 }
+
+/* Pages ---------------------------------------------------------------------- */
+
+.page-head { padding: 2.5rem 0 1.5rem; }
+.page-head h1 { font-size: clamp(2rem, 1.5rem + 2vw, 2.75rem); margin: 0 0 0.75rem; }
+.page-actions { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; font-family: var(--font-sans); font-size: 0.9375rem; margin: 1rem 0 0; }
+.more { font-family: var(--font-sans); font-size: 0.9375rem; margin: 1rem 0 0; }
+.more a::after, .door::after { content: " →" / ""; }
+
+.breadcrumb { font-family: var(--font-sans); font-size: 0.8125rem; padding-top: 1.5rem; }
+.breadcrumb ol { list-style: none; display: flex; flex-wrap: wrap; gap: 0.25rem; margin: 0; padding: 0; color: var(--ink-soft); }
+.breadcrumb li + li::before { content: "›" / ""; margin-inline-end: 0.35rem; }
+.breadcrumb a { color: var(--ink-soft); }
+.reader-main .law-article { padding-top: 1.5rem; }
+
+/* Welcome: the four doors. */
+.doors, .sim-cards {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  margin: 0 0 3.5rem;
+  padding: 0;
+  list-style: none;
+}
+.door {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  height: 100%;
+  padding: 1.25rem;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--paper-raised);
+  color: var(--ink);
+  text-decoration: none;
+}
+.door::after { position: absolute; inset-block-start: 1.1rem; inset-inline-end: 1.25rem; color: var(--accent); font-family: var(--font-sans); }
+.door:hover { border-color: var(--accent); }
+.door-tab { font-family: var(--font-sans); font-size: 0.8125rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.door-question { font-size: 1.375rem; line-height: 1.25; font-weight: 500; text-wrap: balance; }
+.door-text { color: var(--ink-soft); font-size: 1rem; line-height: 1.5; }
+.featured { border-top: 1px solid var(--rule); padding-top: 2.5rem; }
+.featured h2 { font-size: 1.75rem; margin: 0; }
+
+/* Le code: contents. */
+.contents-part { margin-bottom: 2.5rem; }
+.contents { list-style: none; margin: 0; padding: 0; }
+.contents-row {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr) 7.5rem 11rem;
+  gap: 1rem;
+  align-items: baseline;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink);
+  text-decoration: none;
+}
+.contents-row:hover .contents-title { color: var(--accent); }
+.contents-number { font-family: var(--font-sans); font-size: 1.25rem; font-weight: 500; color: var(--accent); text-align: end; font-variant-numeric: tabular-nums; }
+.contents-title { font-size: 1.125rem; }
+.contents-row .level { margin: 0; }
+.contents-status { font-family: var(--font-sans); font-size: 0.8125rem; color: var(--ink-soft); text-align: end; }
+@media (width < 40rem) {
+  .contents-row { grid-template-columns: 2rem minmax(0, 1fr); row-gap: 0.25rem; }
+  .contents-row .level, .contents-status { grid-column: 2; text-align: start; }
+}
+
+.toc-part { font-family: var(--font-sans); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); margin: 1.25rem 0 0.4rem; }
+.toc-part:first-child { margin-top: 0; }
+.toc a[aria-current="page"] { color: var(--ink); font-weight: 500; }
+
+.article-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 2rem 0 0; font-family: var(--font-sans); font-size: 0.9375rem; }
+.article-nav a { display: grid; gap: 0.15rem; padding: 0.9rem 1rem; border: 1px solid var(--rule); border-radius: 8px; color: var(--ink); text-decoration: none; }
+.article-nav a:hover { border-color: var(--accent); }
+.article-nav a span { font-size: 0.8125rem; color: var(--ink-soft); }
+.article-nav-next { text-align: end; }
+
+/* Promesses: counters. */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1rem; margin: 0 0 3rem; font-family: var(--font-sans); }
+.stat { padding: 1rem 1.25rem; border-radius: 10px; background: var(--paper-raised); border: 1px solid var(--rule); }
+.stat dt { font-size: 0.875rem; color: var(--ink-soft); }
+.stat dd { margin: 0.25rem 0 0; font-size: 2.25rem; font-weight: 500; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat-of { font-size: 1.125rem; font-weight: 400; color: var(--ink-soft); }
+.dashboard-part { margin-bottom: 3rem; }
+.dashboard-part .promise-list { margin-top: 1.25rem; }
+
+/* Simulateurs. */
+.rule-link { font-family: var(--font-sans); font-size: 0.9375rem; margin: 0.75rem 0 0; }
+.thresholds { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; margin: 1rem 0 0; font-family: var(--font-sans); font-size: 0.9375rem; color: var(--ink-soft); }
+.threshold { color: var(--ink); }
+.page > .article-extra { margin-top: 0; }
+
+/* Méthode. */
+.method .method-section { max-width: var(--measure); margin-bottom: 2.5rem; }
+.method-section h2 { font-size: 1.5rem; margin: 0 0 0.75rem; }
+.method-section p, .method-section li, .method-section dd { text-wrap: pretty; }
+.method-section ul { padding-inline-start: 1.25rem; }
+.method-section li { margin-bottom: 0.5rem; }
+.method-section dl { margin: 0 0 1rem; }
+.method-section dt { font-family: var(--font-sans); font-weight: 500; margin-top: 0.75rem; }
+.method-section dd { margin: 0.15rem 0 0; }
+.smallcaps { font-variant: small-caps; letter-spacing: 0.03em; }
+.legend-marks dt { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; font-family: var(--font-serif); font-weight: 400; }
+.legend-marks dt .level { margin: 0; }
+.live-number.sample { cursor: default; }

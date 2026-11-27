@@ -197,6 +197,13 @@ function renderParams() {
     el.textContent = DERIVED[el.dataset.derived](v);
   }
 
+  // A variant follows the reader from page to page.
+  for (const a of document.querySelectorAll('a[href^="/"]')) {
+    a.dataset.href ??= a.getAttribute("href");
+    const [path, hash] = a.dataset.href.split("#");
+    a.setAttribute("href", path + (params.isLaw ? "" : location.search) + (hash ? `#${hash}` : ""));
+  }
+
   const banner = document.querySelector("[data-variant-banner]");
   if (banner) {
     banner.hidden = params.isLaw;

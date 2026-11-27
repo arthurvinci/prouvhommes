@@ -34,9 +34,13 @@ const SERIES = [
 // The chart runs to 30 years at least, to compare with current law (no cap).
 const chartMonths = () => Math.max(360, params.p6.saturationMonths);
 
-export function initSeverance(root) {
+/**
+ * `compact`: the calculator only, inside an article, with a link to the full
+ * page (`fullUrl`) that adds the curve, the table and the comparison notes.
+ */
+export function initSeverance(root, { compact = false, fullUrl } = {}) {
   root.innerHTML = `
-<h4 class="extra-title">Essayer</h4>
+<h2 class="extra-title">${compact ? "Essayer" : "Simulateur"}</h2>
 <div class="simulator">
   <form class="sim-controls" novalidate>
     <div class="field">
@@ -60,7 +64,10 @@ export function initSeverance(root) {
   </div>
 </div>
 <p class="note not-due" data-out="not-due" hidden></p>
-<figure class="chart" data-due-only>
+${
+  compact
+    ? `<p class="more"><a href="${fullUrl}">Voir la courbe et la comparaison avec le droit actuel et la Suisse</a></p>`
+    : `<figure class="chart" data-due-only>
   <figcaption>Indemnité selon l'ancienneté, en mois de salaire</figcaption>
   <ul class="legend">${SERIES.map((s) => `<li data-series="${s.key}"><span class="swatch" aria-hidden="true"></span>${s.label}</li>`).join("")}</ul>
   <div class="chart-plot"><svg data-chart role="img" aria-label="Courbes de l'indemnité selon l'ancienneté : ce code, le droit actuel et la Suisse. Valeurs dans le tableau ci-dessous."></svg><div class="chart-tooltip" data-tooltip hidden></div></div>
@@ -72,13 +79,14 @@ export function initSeverance(root) {
     <tbody data-out="table"></tbody>
   </table>
 </div>
-<p class="note">Le simulateur suppose un salaire constant : le salaire de référence est alors égal au salaire. Pour un salaire qui varie, voir l'article suivant. Droit actuel : articles L1234-9 et R1234-2 du code du travail (1/4 de mois par année jusqu'à 10 ans, 1/3 au-delà, dès 8 mois d'ancienneté). Suisse : pas d'indemnité légale de licenciement, sauf cas particulier des salariés de 50 ans et plus.</p>`;
+<p class="note">Le simulateur suppose un salaire constant : le salaire de référence est alors égal au salaire. Pour un salaire qui varie, voir le simulateur <a href="/simulateurs/anti-manipulation/">anti-manipulation</a>. Droit actuel : articles L1234-9 et R1234-2 du code du travail (1/4 de mois par année jusqu'à 10 ans, 1/3 au-delà, dès 8 mois d'ancienneté). Suisse : pas d'indemnité légale de licenciement, sauf cas particulier des salariés de 50 ans et plus.</p>`
+}`;
 
   const $ = (sel) => root.querySelector(sel);
   const seniorityInput = $("#sim-seniority");
   const salaryInput = $("#sim-salary");
   const causeInput = $("#sim-cause");
-  const chart = buildChart($("[data-chart]"), $("[data-tooltip]"), () => Number(seniorityInput.value));
+  const chart = compact ? null : buildChart($("[data-chart]"), $("[data-tooltip]"), () => Number(seniorityInput.value));
   let salary = 300000n;
 
   function render() {
@@ -109,12 +117,12 @@ export function initSeverance(root) {
     notDue.textContent = due
       ? ""
       : (NOT_DUE_NOTES[kind] ?? NOT_DUE_NOTES.default);
-    if (!due) return;
+    if (!due || compact) return;
 
     $('[data-out="table"]').innerHTML = [12, 60, 120, 180, 240, 300]
       .map((mm) => `<tr><th scope="row">${seniority(mm)}</th>${SERIES.map((s) => `<td>${decimal(s.fn(mm))}</td>`).join("")}</tr>`)
       .join("");
-    chart.render();
+    chart?.render();
   }
 
   salaryInput.addEventListener("input", () => {
