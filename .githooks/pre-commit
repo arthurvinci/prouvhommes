@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Recompile le texte et met à jour texte/prouvhommes.pdf dans le commit.
+exec "$(git rev-parse --show-toplevel)/scripts/build-pdf.sh" --stage

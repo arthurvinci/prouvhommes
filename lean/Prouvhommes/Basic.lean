@@ -24,6 +24,17 @@ inductive Partie
   | salarie
   deriving DecidableEq, Repr
 
+/-- Les manières dont la relation de travail prend fin (P1, P3, P4, P9).
+L'argument désigne la partie qui prend l'initiative. -/
+inductive CauseFin
+  /-- Rupture pendant la période d'essai (P3). -/
+  | ruptureEssai (auteur : Partie)
+  /-- Résiliation ordinaire, avec préavis (P4). -/
+  | resiliationOrdinaire (auteur : Partie)
+  /-- Résiliation immédiate pour juste motif (P9). -/
+  | resiliationImmediate (auteur : Partie)
+  deriving DecidableEq, Repr
+
 /-- Niveau d'impérativité d'une disposition (M4).
 * `absolue` : non dérogeable ;
 * `relative` : dérogeable seulement en faveur du salarié ;
