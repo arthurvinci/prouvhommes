@@ -1,13 +1,13 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
-    <title>Prouv'hommes — a proven labour code</title>
+    <title>Prouv'hommes — un code du travail prouvé</title>
     <meta
       name="description"
-      content="A radically simplified French labour code, formalised in Lean to prove its properties."
+      content="Un code du travail français radicalement simplifié, formalisé en Lean pour prouver ses propriétés."
     />
     <script>
       // Applied before first paint to avoid a theme flash.
@@ -20,31 +20,31 @@
     <header class="site-header">
       <a class="brand" href="/">Prouv'hommes</a>
       <button id="theme-toggle" type="button" class="theme-toggle" aria-pressed="false">
-        Dark theme
+        Thème sombre
       </button>
     </header>
 
     <main>
       <section class="hero">
-        <p class="eyebrow">A proposed labour code</p>
-        <h1>Promises, proven.</h1>
+        <p class="eyebrow">Proposition de code du travail</p>
+        <h1>Des promesses, prouvées.</h1>
         <p class="lede">
-          About fifty articles, each paired with its formalisation in Lean.
-          What the code promises, a machine checks.
+          Une cinquantaine d'articles, chacun doublé de sa formalisation en Lean.
+          Ce que le code promet, une machine le vérifie.
         </p>
       </section>
 
       <section class="promise" aria-labelledby="art-6">
         <div class="article-number" aria-hidden="true">6</div>
         <div>
-          <h2 id="art-6">Severance pay never exceeds six months of salary.</h2>
+          <h2 id="art-6">L'indemnité de rupture ne dépasse jamais six mois de salaire.</h2>
           <p class="article-text">
-            Equal to <span class="linked">six months</span> of reference salary,
-            weighted by length of service; not owed in case of
-            <span class="open-notion">just cause</span>.
+            Égale à <span class="linked">six mois</span> de salaire de référence,
+            pondérés selon l'ancienneté ; non due pour
+            <span class="open-notion">juste motif</span>.
           </p>
           <pre class="lean"><code>theorem indemnite_le_six : indemnite m sr ≤ 6 * sr</code></pre>
-          <p class="status">Site under construction</p>
+          <p class="status">Site en construction</p>
         </div>
       </section>
     </main>

@@ -14,7 +14,7 @@ const isDark = () =>
 
 function render() {
   const dark = isDark();
-  toggle.textContent = dark ? "Light theme" : "Dark theme";
+  toggle.textContent = dark ? "Thème clair" : "Thème sombre";
   toggle.setAttribute("aria-pressed", String(dark));
 }
 

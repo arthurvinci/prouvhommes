@@ -45,5 +45,5 @@ Valeurs indicatives, à vérifier au contraste (WCAG AA) pendant l'implémentati
 
 - **Vanilla + Vite**, site statique dans `site/`, déployé sur GitHub Pages. Web components, fonctionnalités natives (popover, container queries, view transitions, Highlight API), selon la Modern Web Guidance.
 - **Calcul exact** (M5) : rationnels en `BigInt`, un seul arrondi final au centime inférieur, comme en Lean. Jamais de flottants pour un montant affiché.
-- **Langue** : le site et son code sont en anglais (identifiants, commentaires, classes CSS, textes de l'interface).
+- **Langue** : les textes du site sont en français ; le code est en anglais (identifiants, commentaires, classes CSS, jetons).
 - **Contenu découplé** : un format de données par article (texte, liens texte ↔ identifiants Lean, notions ouvertes, impérativité, promesses et statut). On démarre sur P6, déjà décidé ; le reste se remplit au fil de la rédaction.
