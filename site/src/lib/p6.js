@@ -58,8 +58,9 @@ export const severance = (sr, months, params = LAW_PARAMS) =>
 
 /**
  * CauseFin. `kind` is "trialTermination" (ruptureEssai), "ordinaryTermination"
- * (resiliationOrdinaire) or "immediateTermination" (resiliationImmediate, for
- * just cause); `party` is "employer" or "employee".
+ * (resiliationOrdinaire), "immediateTermination" (resiliationImmediate, for
+ * just cause), "mutualAgreement" (accordCommun) or "death" (deces); `party`
+ * is "employer" or "employee" for the first three.
  */
 export const isSeveranceDue = (cause) =>
   cause.kind === "ordinaryTermination" && cause.party === "employer";

@@ -12,7 +12,18 @@ const CAUSES = [
   ["ordinaryTermination:employee", "Démission"],
   ["trialTermination:employer", "Rupture pendant la période d'essai"],
   ["immediateTermination:employer", "Résiliation immédiate pour juste motif"],
+  ["mutualAgreement:", "Accord écrit des parties"],
+  ["death:", "Décès du salarié"],
 ];
+
+// What current French law and Swiss law do in the cases where this code
+// owes nothing (shown instead of an all-zero chart).
+const NOT_DUE_NOTES = {
+  mutualAgreement:
+    "Ce code ne prévoit pas d'indemnité en cas d'accord. En droit actuel, la rupture conventionnelle ouvre droit à une indemnité au moins égale à l'indemnité légale de licenciement (article L1237-13 du code du travail) ; le droit suisse n'en prévoit pas.",
+  default:
+    "Rien à comparer : dans ce cas, le droit actuel et le droit suisse ne prévoient pas non plus d'indemnité légale, quelle que soit l'ancienneté.",
+};
 
 const SERIES = [
   { key: "code", label: "Ce code", fn: (m) => coefficient(m, params.p6) },
@@ -97,7 +108,7 @@ export function initSeverance(root) {
     notDue.hidden = due;
     notDue.textContent = due
       ? ""
-      : "Rien à comparer : dans ce cas, le droit actuel et le droit suisse ne prévoient pas non plus d'indemnité légale, quelle que soit l'ancienneté.";
+      : (NOT_DUE_NOTES[kind] ?? NOT_DUE_NOTES.default);
     if (!due) return;
 
     $('[data-out="table"]').innerHTML = [12, 60, 120, 180, 240, 300]
