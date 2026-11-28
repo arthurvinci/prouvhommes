@@ -4,9 +4,9 @@
 
 **Prouv'hommes** propose un code du travail français radicalement simplifié (environ 50 pages, d'inspiration libérale) et le formalise mathématiquement pour prouver des propriétés sur lui. Par exemple :
 
-- l'indemnité de rupture ne dépasse jamais 6 mois de salaire de référence ;
+- l'indemnité légale de rupture ne dépasse jamais 6 mois de salaire de référence ; seul un accord ou le contrat peut prévoir plus ;
 - baisser le dernier salaire avant un licenciement ne change presque rien à l'indemnité ;
-- aucune relation de travail ne se termine sans préavis ou juste motif.
+- aucune relation de travail ne se termine sans préavis effectivement couru, juste motif, accord écrit ou décès.
 
 ## Organisation du dépôt
 

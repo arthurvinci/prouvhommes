@@ -1,4 +1,5 @@
 import Prouvhommes.Hierarchie
+import Prouvhommes.Rupture
 
 /-!
 # Congés payés (P13)
@@ -8,6 +9,13 @@ import Prouvhommes.Hierarchie
 * Les congés ne peuvent pas être remplacés par une indemnité, sauf à la fin du
   contrat, pour les jours acquis et non pris (`absolue`, directive 2003/88,
   art. 7).
+
+Le rachat est une disposition `absolue` de valeur nulle : un accord
+d'entreprise ou un contrat peut bien stipuler un rachat, la stipulation est
+sans effet. L'indemnité se lit sur l'état de la relation (`Rupture.lean`) :
+`pas_de_rachat_conges` vaut pour toutes les stipulations et dans tout état
+atteint avant la fin, `indemniteCompensatrice_fin` à la fin, quelle qu'en soit
+la cause.
 -/
 
 namespace Prouvhommes
@@ -35,18 +43,40 @@ theorem congesAcquis_annee : congesAcquis dispCongesAnnuels.loi 12 = 20 := by
 theorem conges_ge_legal (st : Stipulations ℕ) : 20 ≤ applicable dispCongesAnnuels st :=
   applicable_relative_plancher (d := dispCongesAnnuels) rfl st
 
-/-- Indemnité compensatrice des congés acquis et non pris, en centimes : due
-seulement à la fin du contrat. -/
-def indemniteCompensatrice (finDeContrat : Bool) (joursNonPris salaireJournalier : ℚ) : ℚ :=
-  if finDeContrat then joursNonPris * salaireJournalier else 0
+/-- Rachat des congés pendant le contrat (P13), en fraction du salaire
+journalier par jour racheté : absolue, nul. -/
+def dispRachatConges : Disposition ℚ :=
+  { niveau := .absolue, loi := 0, sens := .plusGrand }
 
-/-- **Pas de rachat des congés** pendant le contrat. -/
-theorem pas_de_rachat_conges (joursNonPris salaireJournalier : ℚ) :
-    indemniteCompensatrice false joursNonPris salaireJournalier = 0 := rfl
+/-- Indemnité versée pour `joursNonPris` jours de congés acquis et non pris,
+dans l'état `s` de la relation, compte tenu des stipulations `st` sur le
+rachat. À la fin du contrat, les jours sont indemnisés au salaire journalier ;
+avant, ils ne peuvent l'être qu'au taux de rachat applicable. -/
+def indemniteCompensatrice (st : Stipulations ℚ) (s : Etat)
+    (joursNonPris salaireJournalier : ℚ) : ℚ :=
+  match s.phase with
+  | .termine .. => joursNonPris * salaireJournalier
+  | _ => applicable dispRachatConges st * joursNonPris * salaireJournalier
 
-/-- À la fin du contrat, les jours non pris sont indemnisés. -/
-theorem indemniteCompensatrice_fin (joursNonPris salaireJournalier : ℚ) :
-    indemniteCompensatrice true joursNonPris salaireJournalier
-      = joursNonPris * salaireJournalier := rfl
+/-- **Pas de rachat des congés.** Quels que soient l'accord d'entreprise et le
+contrat, les délais de préavis et la suite d'événements, tant que la relation
+n'est pas terminée, aucun jour de congé n'est remplacé par une indemnité. -/
+theorem pas_de_rachat_conges {I : Interpretation} (st : Stipulations ℚ) (k : Contrat)
+    (D : Delais) (evs : List (Evenement I)) (h : EnCours (execute k D evs))
+    (joursNonPris salaireJournalier : ℚ) :
+    indemniteCompensatrice st (execute k D evs) joursNonPris salaireJournalier = 0 := by
+  unfold indemniteCompensatrice
+  split
+  · rename_i c j hc; exact absurd hc (h c j)
+  · rw [applicable_absolue (d := dispRachatConges) rfl]
+    simp [dispRachatConges]
+
+/-- À la fin du contrat, quelle qu'en soit la cause et quelles que soient les
+stipulations, les jours acquis et non pris sont indemnisés en entier. -/
+theorem indemniteCompensatrice_fin (st : Stipulations ℚ) {s : Etat} {c : CauseFin} {j : Jour}
+    (hs : s.phase = .termine c j) (joursNonPris salaireJournalier : ℚ) :
+    indemniteCompensatrice st s joursNonPris salaireJournalier
+      = joursNonPris * salaireJournalier := by
+  simp [indemniteCompensatrice, hs]
 
 end Prouvhommes
