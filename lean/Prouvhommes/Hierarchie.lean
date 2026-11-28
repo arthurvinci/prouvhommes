@@ -261,6 +261,25 @@ theorem indemnite_ge_legal (sr : ℚ) (m : Mois) (st : Stipulations ℕ) :
     indemnite sr m ≤ applicable (dispIndemnite sr m) st :=
   applicable_relative_plancher (d := dispIndemnite sr m) rfl st
 
+/-- **Plafond, toutes conventions confondues.** L'indemnité applicable ne
+dépasse 6 mois de salaire de référence que si un accord d'entreprise ou le
+contrat le stipule, et jamais au-delà de ce qu'il stipule : le code seul ne
+paie jamais plus que le plafond. -/
+theorem indemnite_applicable_le_plafond {sr : ℚ} (hsr : 0 ≤ sr) (m : Mois)
+    (st : Stipulations ℕ) :
+    ((applicable (dispIndemnite sr m) st : ℕ) : ℚ)
+      ≤ max (6 * sr) ((max (st.accord.getD 0) (st.contrat.getD 0) : ℕ) : ℚ) := by
+  rcases applicable_relative_source (d := dispIndemnite sr m) rfl st with h | h | h
+  · have : ((applicable (dispIndemnite sr m) st : ℕ) : ℚ) ≤ 6 * sr := by
+      rw [h]; simpa [dispIndemnite, plafondMois] using indemnite_le_plafond hsr m
+    exact le_max_of_le_left this
+  · refine le_max_of_le_right ?_
+    rw [h]
+    exact_mod_cast le_max_left _ _
+  · refine le_max_of_le_right ?_
+    rw [h]
+    exact_mod_cast le_max_right _ _
+
 /-- Contrat dont l'essai est fixé par les stipulations, dans la limite légale. -/
 def Contrat.avecEssai (k : Contrat) (st : Stipulations ℕ) : Contrat :=
   { k with dureeEssai := applicable dispDureeEssai st, essai_le_max := dureeEssai_le_max st }

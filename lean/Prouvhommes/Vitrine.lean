@@ -38,10 +38,15 @@ namespace Prouvhommes
 
 /-! ## Indemnité de rupture (P6) -/
 
-/-! T-PLAFOND : l'indemnité ne dépasse jamais 6 mois de salaire de référence. -/
+/-! T-PLAFOND : l'indemnité légale ne dépasse jamais 6 mois de salaire de référence. -/
 
 /-- info: 'Prouvhommes.indemniteRupture_le_plafond' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms indemniteRupture_le_plafond
+
+/-! Seul un accord ou le contrat peut dépasser ce plafond, et jamais au-delà de ce qu'il stipule. -/
+
+/-- info: 'Prouvhommes.indemnite_applicable_le_plafond' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms indemnite_applicable_le_plafond
 
 /-! T-MANIP : après 5 ans à temps plein, baisser le dernier salaire de Δ baisse l'indemnité de moins de 3Δ/11 + 1 centime. -/
 
@@ -80,7 +85,7 @@ namespace Prouvhommes
 
 /-! ## Rupture (P1, P3, P4, P8, P9, P9 bis) -/
 
-/-! T-PREAVIS : toute fin est justifiée par un préavis couru, un juste motif, un accord écrit ou un décès. -/
+/-! T-PREAVIS : toute fin est justifiée par un préavis couru, ou par un juste motif, un accord écrit ou un décès survenu le jour même. -/
 
 /-- info: 'Prouvhommes.fin_justifiee' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms fin_justifiee
@@ -95,24 +100,24 @@ namespace Prouvhommes
 /-- info: 'Prouvhommes.preavis_ordinaire_apres_essai' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms preavis_ordinaire_apres_essai
 
-/-! Pas de résiliation immédiate sans juste motif, pour toute interprétation. -/
+/-! Une résiliation immédiate est déclenchée le jour même, par la partie qui résilie, sur un juste motif, pour toute interprétation. -/
 
 /-- info: 'Prouvhommes.fin_resiliationImmediate' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms fin_resiliationImmediate
 
-/-! Le temps seul ne met jamais fin à la relation. -/
+/-! Sans notification, juste motif, accord écrit ni décès, la relation ne prend jamais fin. -/
 
-/-- info: 'Prouvhommes.pas_de_terme' depends on axioms: [propext, Classical.choice] -/
+/-- info: 'Prouvhommes.pas_de_terme' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms pas_de_terme
 
-/-! Protection : congé de l'employeur nul. -/
+/-! Protection : une notification reçue pendant une protection ne fonde jamais un licenciement. -/
 
-/-- info: 'Prouvhommes.protection_nullite' depends on axioms: [propext, Classical.choice] -/
+/-- info: 'Prouvhommes.protection_nullite' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms protection_nullite
 
-/-! Protection : préavis de l'employeur suspendu. -/
+/-! Protection : le préavis de l'employeur court autant de journées hors protection que sa durée. -/
 
-/-- info: 'Prouvhommes.protection_suspend' depends on axioms: [propext, Classical.choice] -/
+/-- info: 'Prouvhommes.protection_suspend' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms protection_suspend
 
 /-! ## Modèle composé : conventions, rupture et indemnité ensemble -/
@@ -242,7 +247,7 @@ namespace Prouvhommes
 /-- info: 'Prouvhommes.conges_ge_legal' depends on axioms: [propext] -/
 #guard_msgs in #print axioms conges_ge_legal
 
-/-! Pas de rachat des congés pendant le contrat. -/
+/-! Pas de rachat des congés pendant le contrat, quels que soient l'accord et le contrat. -/
 
 /-- info: 'Prouvhommes.pas_de_rachat_conges' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms pas_de_rachat_conges

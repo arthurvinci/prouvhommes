@@ -14,7 +14,9 @@ import Prouvhommes.SalaireReference
 L'indemnité n'est due qu'en cas de résiliation ordinaire par l'employeur.
 
 Résultats principaux :
-* `indemniteRupture_le_plafond` (**T-PLAFOND**) : jamais plus de 6 mois de `SR` ;
+* `indemniteRupture_le_plafond` (**T-PLAFOND**) : l'indemnité légale ne dépasse
+  jamais 6 mois de `SR` (une convention peut prévoir plus :
+  `indemnite_applicable_le_plafond`, dans `Hierarchie.lean`) ;
 * `indemniteRupture_manipulation` (**T-MANIP**) : après 5 ans à temps plein,
   baisser le dernier salaire de `Δ` baisse l'indemnité de moins de
   `3Δ/11 + 1` centime ;
@@ -201,8 +203,10 @@ theorem indemniteRupture_eq_zero {c : CauseFin} (hc : c ≠ .resiliationOrdinair
     · exact absurd ((indemniteDue_iff c).1 hd) hc
   simp [indemniteRupture, this]
 
-/-- **T-PLAFOND.** L'indemnité de rupture ne dépasse jamais 6 mois de salaire
-de référence. -/
+/-- **T-PLAFOND.** L'indemnité légale de rupture ne dépasse jamais 6 mois de
+salaire de référence, quelle que soit la cause de la fin. Un accord ou le
+contrat peut prévoir plus (disposition `relative`), jamais au-delà de ce qu'il
+stipule : `indemnite_applicable_le_plafond`. -/
 theorem indemniteRupture_le_plafond (h : List MoisTravaille) (m : Mois) (c : CauseFin) :
     (indemniteRupture h m c : ℚ) ≤ 6 * salaireReference h := by
   unfold indemniteRupture

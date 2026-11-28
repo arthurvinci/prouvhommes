@@ -25,7 +25,7 @@ export const OPEN_NOTIONS = {
 
 export const ENRICHED = {
   "art:indemnite": {
-    sourceHash: "8f1f43599884",
+    sourceHash: "76d40289e341",
     leanDecls: [
       "indemniteRupture", "indemniteDue", "indemnite", "indemniteQ", "coefficient",
       "fractionAnciennete", "plafondMois", "ancienneteSaturation", "smoothstep",
