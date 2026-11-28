@@ -190,12 +190,16 @@ export function buildPages(law, warn = console.warn) {
     <h1>${escapeHtml(s.question)}</h1>
     <p class="section-lede">${escapeHtml(s.lede)}</p>
     ${article ? `<p class="rule-link">La règle : <a href="${articleUrl(article)}">article ${article.number}, ${escapeHtml(article.title.toLowerCase())}</a>.</p>` : ""}
-    <p class="thresholds">Seuils du calcul, modifiables : ${s.params
-      .map(
-        (p) =>
-          `<span class="threshold">${PARAM_LABEL[p][0]} <button type="button" class="live-number" data-param="${p}" data-link="${PARAM_LINK[p]}">${PARAM_TEXT[p]}</button> ${PARAM_LABEL[p][1]}</span>`,
-      )
-      .join("")}</p>
+    ${
+      s.params.length
+        ? `<p class="thresholds">Seuils du calcul, modifiables : ${s.params
+            .map(
+              (p) =>
+                `<span class="threshold">${PARAM_LABEL[p][0]} <button type="button" class="live-number" data-param="${p}" data-link="${PARAM_LINK[p]}">${PARAM_TEXT[p]}</button> ${PARAM_LABEL[p][1]}</span>`,
+            )
+            .join("")}</p>`
+        : ""
+    }
   </header>
   <div class="article-extra" data-extra="${s.extra}"></div>
 </main>`,

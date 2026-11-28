@@ -5,10 +5,12 @@ import "./base.js";
 import { initReader } from "./reader.js";
 import { initSeverance } from "./components/severance.js";
 import { initManipulation } from "./components/manipulation.js";
+import { initNotice } from "./components/notice.js";
 
 const EXTRAS = {
   "severance-simulator": initSeverance,
   "manipulation-demo": initManipulation,
+  "notice-simulator": initNotice,
 };
 
 for (const el of document.querySelectorAll("[data-extra]")) {

@@ -242,7 +242,9 @@ function renderDecl(group) {
 
 /**
  * Every theorem cited by the text, once, in document order, with the
- * articles that cite it (a theorem can back several articles).
+ * articles that cite it (a theorem can back several articles). Then the
+ * theorems pinned in Vitrine.lean that no article cites, with their showcase
+ * section: often properties of several articles at once (the composed model).
  */
 export function allPromises(law) {
   const byName = new Map();
@@ -252,17 +254,23 @@ export function allPromises(law) {
       byName.get(name).articles.push(a);
     }
   }
+  for (const { name, section } of law.showcase) {
+    if (!byName.has(name)) byName.set(name, { name, articles: [], section, status: proofStatus(name, law.decls) });
+  }
   return [...byName.values()];
 }
 
 /** A list of promises as cards (home page, dashboard). */
 export function renderPromiseCards(promises, law) {
   return `<ul class="promise-list">${promises
-    .map(({ name, articles, status }) => {
+    .map(({ name, articles, section, status }) => {
       const { tag, text } = splitSummary(promiseText(name, law));
-      const links = articles
-        .map((a) => `<a class="promise-article" href="${articleUrl(a)}">Article ${a.number} · ${escapeHtml(a.title)}</a>`)
-        .join("");
+      // Cited by no article: link to the theorem itself, under its showcase section.
+      const links = articles.length
+        ? articles
+            .map((a) => `<a class="promise-article" href="${articleUrl(a)}">Article ${a.number} · ${escapeHtml(a.title)}</a>`)
+            .join("")
+        : `${section ? `<span class="promise-section">${escapeHtml(section)}</span>` : ""}${leanLink(name, law.decls.get(name))}`;
       return `<li class="promise-item">
   <p class="promise-text">${text}</p>
   <p class="promise-meta">${statusBadge(status)}${tag ? `<span class="promise-tag">${tag}</span>` : ""}${links}</p>
@@ -295,7 +303,19 @@ ${parts(law)
 ${renderPromiseCards(promises, law)}
 </section>`;
   })
-  .join("\n")}`;
+  .join("\n")}
+${renderUncited(all, law)}`;
+}
+
+/** Pinned theorems that no article cites, after the parts of the text. */
+function renderUncited(all, law) {
+  const uncited = all.filter((x) => !x.articles.length);
+  if (!uncited.length) return "";
+  return `<section class="dashboard-part" aria-labelledby="d-transverses">
+<h2 class="part-title" id="d-transverses">Propriétés de l’ensemble</h2>
+<p class="part-lede">Théorèmes épinglés dans la vitrine des preuves qu’aucun article ne cite. Ceux du modèle composé portent sur plusieurs articles à la fois : les conventions, la rupture et l’indemnité y sont exécutées ensemble.</p>
+${renderPromiseCards(uncited, law)}
+</section>`;
 }
 
 /* Méthode ------------------------------------------------------------------- */

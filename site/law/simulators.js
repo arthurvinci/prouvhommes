@@ -4,6 +4,15 @@
 
 export const SIMULATORS = [
   {
+    slug: "preavis",
+    extra: "notice-simulator",
+    title: "Préavis",
+    question: "Quel préavis, et que change un jour de plus ?",
+    lede: "Le préavis croît avec l’ancienneté, sans palier : comparé au droit actuel et à ses effets de seuil.",
+    article: "art:resiliation",
+    params: [],
+  },
+  {
     slug: "indemnite",
     extra: "severance-simulator",
     title: "Indemnité de rupture",

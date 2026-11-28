@@ -1,5 +1,5 @@
 // "Essayer" panel of the severance article: a simulator, the curve compared
-// with current law and Switzerland, and the values table (the chart's table
+// with current law, and the values table (the chart's table
 // view). Everything follows the live thresholds.
 
 import { params } from "../lib/params.js";

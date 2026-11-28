@@ -71,6 +71,7 @@ export const ENRICHED = {
 <p>Le préavis est ainsi de sept jours au début du contrat, de trente jours après trente jours, de soixante jours après un an et de quatre-vingt-dix jours après neuf ans ; entre ces dates, il croît régulièrement, d’au plus un jour par jour d’ancienneté.</p>
 <p><span class="para">III. —</span> Un accord d’entreprise ou le contrat peut <span class="link" data-link="longer">allonger le préavis dû par l’employeur</span> et <span class="link" data-link="shorter">raccourcir celui dû par le salarié</span> (article&nbsp;{{ref:art:relatives}}).</p>
 `,
+    extra: "notice-simulator",
   },
 
   "art:salaire-reference": {

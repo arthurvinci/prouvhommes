@@ -18,6 +18,7 @@
 |---|---|
 | Lecteur d'articles | Concepts 1 à 3 ; niveau d'impérativité en marge (M4) |
 | Simulateur d'indemnité | P6 exact, courbe smoothstep comparée au droit actuel |
+| Simulateur de préavis | M8 : la courbe continue comparée aux paliers du droit actuel, et ce que change une notification reçue un jour plus tard (`fin_preavis_succ`) |
 | Démo anti-manipulation | Varier le dernier salaire : SR ne bouge que de αΔ/B (moins de Δ/22 après 5 ans à temps plein) |
 | Tableau des preuves | Promesses en français, statut (prouvé, `sorry`, à écrire), lien vers le théorème |
 
@@ -31,7 +32,7 @@ Une page d'accueil, puis quatre onglets.
 | Le code | `/code/` | Sommaire par titre : niveau d'impérativité et état de la formalisation de chaque article |
 | — un article | `/code/<label>/` | Les deux faces, les garanties, le simulateur lié en version courte, articles voisins. L'adresse vient du `\label` (`art:indemnite` → `/code/indemnite/`), elle survit à la renumérotation |
 | — texte intégral | `/code/texte-integral/` | Tous les articles à la suite, et le PDF |
-| Promesses | `/promesses/` | Compteurs, puis chaque théorème une seule fois, avec les articles qui le citent |
+| Promesses | `/promesses/` | Compteurs, puis chaque théorème une seule fois, avec les articles qui le citent ; enfin, sous « Propriétés de l'ensemble », les théorèmes de la vitrine qu'aucun article ne cite (modèle composé) |
 | Simulateurs | `/simulateurs/`, `/simulateurs/<nom>/` | Chaque simulateur en version complète, avec ses seuils modifiables |
 | Méthode | `/methode/` | L'introduction du texte, lue depuis le LaTeX, puis la légende du site |
 

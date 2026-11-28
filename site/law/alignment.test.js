@@ -10,6 +10,7 @@ import { SIMULATORS } from "./simulators.js";
 import { LAW_PARAMS } from "../src/lib/p6.js";
 import { checkedTheorems } from "../src/lib/promises.js";
 import { eq, q } from "../src/lib/rational.js";
+import { NOTICE_POINTS, notice } from "../src/lib/notice.js";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const law = readLaw(repoRoot);
@@ -29,6 +30,21 @@ describe("site ↔ Lean", () => {
     expect(eq(LAW_PARAMS.capMonths, leanValue("plafondMois"))).toBe(true);
     expect(eq(q(LAW_PARAMS.saturationMonths), leanValue("ancienneteSaturation"))).toBe(true);
     expect(eq(LAW_PARAMS.alpha, leanValue("alphaSR"))).toBe(true);
+  });
+
+  // The notice simulator recomputes `preavis` in JS: same formula, same
+  // points of passage as the Lean theorems `preavis_zero` … `preavis_neuf_ans`.
+  test("the notice simulator computes Lean's preavis", () => {
+    expect(law.decls.get("preavis").source.replace(/\s+/g, " ")).toContain(
+      "min (min (7 + 23 * j / 30) (30 + 6 * (j - 30) / 67)) (min (60 + 3 * (j - 365) / 292) 90)",
+    );
+    const points = [...law.decls.values()]
+      .map((d) => d.source.match(/^theorem preavis_\w+ : preavis (\d+) = (\d+)/))
+      .filter(Boolean)
+      .map((m) => [Number(m[1]), Number(m[2])]);
+    expect(points.length).toBeGreaterThanOrEqual(4);
+    for (const [j, n] of points) expect(notice(j), `preavis ${j}`).toBe(n);
+    expect(NOTICE_POINTS).toEqual(points);
   });
 
   test("every theorem with a live check exists in Lean", () => {
