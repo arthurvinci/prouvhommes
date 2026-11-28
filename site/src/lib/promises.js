@@ -5,8 +5,8 @@
 // ("broken"), or check the property by computation on a range of cases
 // ("checked"), which is not a proof. Never a green tick for a variant.
 
-import { q, cmp, mul, sub, eq } from "./rational.js";
-import { referenceSalary, severancePay } from "./p6.js";
+import { q, cmp, mul, sub, div, pow, eq, ONE, toNumber } from "./rational.js";
+import { activityMass, referenceSalary, severancePay } from "./p6.js";
 import { euros, eurosOfRational, seniority } from "./format.js";
 
 const FIRED = { kind: "ordinaryTermination", party: "employer" };
@@ -47,45 +47,50 @@ const CHECKS = {
     };
   },
 
-  // T-MANIP: lowering the last salary by Δ costs less than Δ/4 + 1 cent.
+  // T-MANIP: after 5 years full time, lowering the last salary by Δ costs
+  // less than 3Δ/11 + 1 cent.
   indemniteRupture_manipulation(p) {
-    // The severance moves by cap × α × Δ (up to rounding); the bound is Δ/4.
-    const slope = mul(p.capMonths, p.alpha);
-    if (cmp(slope, q(1, 4)) <= 0) {
+    // Worst case: exactly 60 full months. The last one weighs α/B in the
+    // reference salary, with B = 1 − (1 − α)^60; the severance moves by
+    // cap × α/B × Δ (up to rounding).
+    const slope = div(mul(p.capMonths, p.alpha), sub(ONE, pow(sub(ONE, p.alpha), 60)));
+    if (cmp(slope, q(3, 11)) <= 0) {
       return {
         state: "checked",
-        text: `Tenue : une baisse de Δ du dernier salaire coûte au plus ${p.capMonths.n} × 1/${p.alpha.d} = ${slope.n}/${slope.d} de Δ, sous la borne de Δ/4.`,
+        text: `Tenue : après 5 ans à temps plein, une baisse de Δ du dernier salaire coûte au plus ${pct(slope)} de Δ, sous la borne de 3Δ/11 (${pct(q(3, 11))}).`,
       };
     }
     const m = p.saturationMonths;
-    // Large enough for the excess (slope − 1/4)·Δ to beat the 1-cent slack.
+    const base = repeat(59, SALARY);
+    // Large enough for the excess (slope − 3/11)·Δ to beat the 1-cent slack.
     let delta = SALARY;
     for (;;) {
-      const low = severancePay([SALARY, SALARY], m, FIRED, p);
-      const high = severancePay([SALARY, SALARY + delta], m, FIRED, p);
+      const low = severancePay([...base, SALARY], m, FIRED, p);
+      const high = severancePay([...base, SALARY + delta], m, FIRED, p);
       const loss = high - low;
-      if (4n * loss >= delta + 4n) {
+      if (11n * loss >= 3n * delta + 11n) {
         return {
           state: "broken",
-          text: `Rompue. Contre-exemple : à ${seniority(m)}, baisser le dernier salaire de ${euros(delta)} fait perdre ${euros(loss)} d’indemnité, plus que la borne Δ/4 + 0,01 € (${euros(delta / 4n + 1n)}).`,
+          text: `Rompue. Contre-exemple : après 5 ans à temps plein et ${seniority(m)} d’ancienneté, baisser le dernier salaire de ${euros(delta)} fait perdre ${euros(loss)} d’indemnité, plus que la borne 3Δ/11 + 0,01 € (${euros((3n * delta) / 11n + 1n)}).`,
         };
       }
       delta *= 10n;
     }
   },
 
-  // The last salary moves SR by exactly Δ/24.
+  // The last salary moves SR by exactly αΔ/B, B being the activity mass.
   salaireReference_sensibilite(p) {
     const delta = 240000n;
-    const h = repeat(Math.max(2, p.windowSize), SALARY);
+    const h = repeat(60, SALARY);
     const shift = sub(referenceSalary([...h, SALARY + delta], p), referenceSalary([...h, SALARY], p));
-    if (eq(shift, q(delta, 24))) {
-      return { state: "checked", text: "Tenue : le poids du dernier mois reste 1/24." };
+    const weight = div(p.alpha, activityMass([...h, SALARY], p));
+    if (eq(shift, mul(weight, q(delta)))) {
+      return {
+        state: "checked",
+        text: `Tenue : après 5 ans à temps plein, le dernier mois pèse α/B = ${pct(weight)} du salaire de référence.`,
+      };
     }
-    return {
-      state: "broken",
-      text: `Rompue. Le dernier mois pèse désormais 1/${p.alpha.d} : une hausse de ${euros(delta)} déplace le salaire de référence de ${eurosOfRational(shift)}, pas de ${euros(delta / 24n)}.`,
-    };
+    return { state: "broken", text: `Rompue : le dernier mois ne pèse pas α/B.` };
   },
 
   // Agreements and contracts can only raise the severance (P15).
@@ -112,3 +117,5 @@ const CHECKS = {
     return { state: "checked", text: "Vérifiée par le calcul, mois par mois, de 0 à 50 ans d’ancienneté." };
   },
 };
+
+const pct = (r) => `${(toNumber(r) * 100).toFixed(1).replace(".", ",")} %`;

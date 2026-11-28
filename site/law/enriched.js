@@ -13,7 +13,7 @@
 // source shown beside the article.
 
 // Each live threshold is also linked to the Lean constant that holds it.
-const PARAM_LINK = { capMonths: "cap", saturationMonths: "saturation", windowSize: "window", alpha: "alpha" };
+const PARAM_LINK = { capMonths: "cap", saturationMonths: "saturation", alpha: "alpha" };
 const live = (param, text) =>
   `<button type="button" class="live-number link" data-param="${param}" data-link="${PARAM_LINK[param]}">${text}</button>`;
 
@@ -25,7 +25,7 @@ export const OPEN_NOTIONS = {
 
 export const ENRICHED = {
   "art:indemnite": {
-    sourceHash: "5397499dea8b",
+    sourceHash: "8f1f43599884",
     leanDecls: [
       "indemniteRupture", "indemniteDue", "indemnite", "indemniteQ", "coefficient",
       "fractionAnciennete", "plafondMois", "ancienneteSaturation", "smoothstep",
@@ -54,20 +54,40 @@ export const ENRICHED = {
     extra: "severance-simulator",
   },
 
-  "art:salaire-reference": {
-    sourceHash: "91633a621501",
-    leanDecls: ["salaireReference", "fenetre", "moisPayes", "tailleFenetre", "ema", "pasEMA", "alphaSR"],
+  "art:resiliation": {
+    sourceHash: "8eac7805bc13",
+    leanDecls: ["preavis", "dispPreavisEmployeur", "dispPreavisSalarie"],
     links: {
-      unpaid: String.raw`filter \(· ≠ 0\)|moisPayes`,
-      window: String.raw`tailleFenetre`,
-      first: String.raw`\| s :: reste => reste\.foldl \(pasEMA α\) s`,
+      curve: String.raw`min \(min \(7 \+ 23 \* j / 30\)`,
+      longer: String.raw`sens := \.plusGrand`,
+      shorter: String.raw`sens := \.plusPetit`,
+    },
+    body: `
+<p><span class="para">I. —</span> Après la période d’essai, chaque partie peut résilier le contrat à tout moment, sans motif, moyennant un préavis. Aucune résiliation ordinaire ne peut être notifiée pendant la période d’essai.</p>
+<p><span class="para">II. —</span> <span class="link" data-link="curve">La durée du préavis, en jours, est la partie entière de la plus petite des quatre quantités suivantes</span>, où <var>j</var> est l’ancienneté du salarié en jours au jour de la réception de la notification :</p>
+<div class="formula" role="math" aria-label="7 plus 23 trentièmes de j ; 30 plus 6 soixante-septièmes de j moins 30 ; 60 plus 3 deux-cent-quatre-vingt-douzièmes de j moins 365 ; 90">
+  <span class="formula-main"><span class="link" data-link="curve">7 + <span class="frac"><span>23</span><span>30</span></span> <var>j</var>, &emsp; 30 + <span class="frac"><span>6</span><span>67</span></span> (<var>j</var> − 30), &emsp; 60 + <span class="frac"><span>3</span><span>292</span></span> (<var>j</var> − 365), &emsp; 90.</span></span>
+</div>
+<p>Le préavis est ainsi de sept jours au début du contrat, de trente jours après trente jours, de soixante jours après un an et de quatre-vingt-dix jours après neuf ans ; entre ces dates, il croît régulièrement, d’au plus un jour par jour d’ancienneté.</p>
+<p><span class="para">III. —</span> Un accord d’entreprise ou le contrat peut <span class="link" data-link="longer">allonger le préavis dû par l’employeur</span> et <span class="link" data-link="shorter">raccourcir celui dû par le salarié</span> (article&nbsp;{{ref:art:relatives}}).</p>
+`,
+  },
+
+  "art:salaire-reference": {
+    sourceHash: "5e82cb2453b6",
+    leanDecls: ["MoisTravaille", "salaireReference", "masseSalaires", "masseActivite", "sommeExp", "pasEMA", "alphaSR"],
+    links: {
+      activity: String.raw`activite : ℚ := 1`,
+      all: String.raw`h\.map`,
+      zero: String.raw`\(pasEMA α\) 0`,
       step: String.raw`α \* x \+ \(1 - α\) \* e`,
+      quotient: String.raw`masseSalaires h / masseActivite h`,
       alpha: String.raw`alphaSR|1 / 24`,
     },
     body: `
-<p><span class="para">I. —</span> Le salaire mensuel est la rémunération brute totale versée au titre d’un mois, primes et heures supplémentaires comprises. <span class="link" data-link="unpaid">Un mois sans salaire n’est pas pris en compte.</span></p>
-<p><span class="para">II. —</span> Sont pris en compte les ${live("windowSize", "soixante")} <span class="link" data-link="window">derniers mois pour lesquels un salaire a été versé</span> ou, si le contrat en compte moins, tous ces mois.</p>
-<p><span class="para">III. —</span> Les mois pris en compte sont parcourus du plus ancien au plus récent. <span class="link" data-link="first">Le salaire de référence est d’abord égal au salaire du premier mois.</span> <span class="link" data-link="step">À chaque mois suivant, il devient la somme d’un ${live("alpha", "vingt-quatrième")} du salaire de ce mois et des <span data-derived="alphaComplement">vingt-trois vingt-quatrièmes</span> du salaire de référence précédent.</span></p>
+<p><span class="para">I. —</span> Le salaire mensuel est la rémunération brute totale versée au titre d’un mois, primes et heures supplémentaires comprises. <span class="link" data-link="activity">Le taux d’activité d’un mois est la fraction de ce mois pendant laquelle le salarié a travaillé ou a été rémunéré, congés payés compris ; il est compris entre zéro et un.</span></p>
+<p><span class="para">II. —</span> <span class="link" data-link="all">Tous les mois du contrat sont pris en compte</span>, du plus ancien au plus récent. <span class="link" data-link="zero">La masse des salaires et la masse d’activité sont nulles avant le premier mois.</span> À chaque mois, <span class="link" data-link="step">la masse des salaires devient la somme d’un ${live("alpha", "vingt-quatrième")} du salaire de ce mois et des <span data-derived="alphaComplement">vingt-trois vingt-quatrièmes</span> de la masse des salaires précédente</span> ; <span class="link" data-link="step">la masse d’activité devient la somme d’un ${live("alpha", "vingt-quatrième")} du taux d’activité de ce mois et des <span data-derived="alphaComplement">vingt-trois vingt-quatrièmes</span> de la masse d’activité précédente</span>.</p>
+<p><span class="para">III. —</span> <span class="link" data-link="quotient">Le salaire de référence est le quotient de la masse des salaires par la masse d’activité.</span> Il est nul si la masse d’activité est nulle.</p>
 `,
     extra: "manipulation-demo",
   },

@@ -13,11 +13,18 @@ d'une liste d'événements.
 * Une notification est datée du jour de sa **réception**. Le préavis court
   à partir du lendemain : notifié au jour `d`, un préavis de `n` jours couvre
   les jours `d + 1, …, d + n`, et le dernier jour de la relation est `d + n`.
-* Pendant l'essai, une notification ouvre un préavis d'essai de 7 jours, qui
-  peut se terminer après la fin de l'essai (P3).
-* Après l'essai, une notification ouvre un préavis ordinaire de 30, 60 ou
-  90 jours selon l'ancienneté (P4). Il n'y a pas de préavis ordinaire avant la
-  fin de l'essai (P1).
+* Pendant l'essai, une notification ouvre une rupture d'essai (P3) ; après
+  l'essai, une résiliation ordinaire (P4). Il n'y a pas de préavis ordinaire
+  avant la fin de l'essai (P1). Dans les deux cas, la durée du préavis suit la
+  même courbe continue de l'ancienneté (`preavis`) : la fin de l'essai ne crée
+  pas de saut. Le préavis d'une rupture d'essai peut se terminer après la fin
+  de l'essai.
+* Les durées de préavis ne sont pas lues dans la loi : elles sont un paramètre
+  `D : Delais` de la machine. `Delais.legal` donne les durées légales ; le
+  modèle composé (`Modele.lean`) les obtient par la hiérarchie des normes, à
+  partir de l'accord d'entreprise et du contrat. Les théorèmes valent pour
+  **tous** les délais, ou pour tous les délais admissibles
+  (`Delais.Admissible`) : jamais seulement pour les valeurs légales.
 * Pendant une période de protection (P8), une notification de l'employeur est
   nulle et le décompte d'un préavis ordinaire de l'employeur est suspendu.
   La protection ne joue ni pendant l'essai, ni contre le salarié.
@@ -29,8 +36,11 @@ d'une liste d'événements.
 Résultats principaux :
 * `fin_justifiee` (**T-PREAVIS**) : toute fin de relation est justifiée par un
   préavis effectivement couru, un juste motif, un accord écrit ou un décès ;
-* `duree_minimale` : une résiliation ordinaire n'intervient jamais avant
-  « durée d'essai + 30 jours » ;
+* `duree_minimale` : un licenciement ordinaire n'intervient jamais avant
+  « durée d'essai + préavis à la fin de l'essai » (60 jours pour l'essai de
+  30 jours par défaut), quelles que soient les stipulations ; ce n'est
+  pas vrai d'une démission, dont le préavis peut être raccourci
+  (`demission_sans_duree_minimale`, dans `Modele.lean`) ;
 * `protection_nullite`, `protection_suspend` : effets de la protection (P8).
 -/
 
@@ -85,10 +95,10 @@ inductive Evenement (I : Interpretation)
 
 namespace Cadre
 
-/-- Durée du préavis, en jours, pour une notification reçue au jour `j`. -/
+/-- Durée légale du préavis, en jours, pour une notification reçue au jour `j` :
+la même courbe dans les deux cadres. -/
 def duree : Cadre → Jour → ℕ
-  | essai, _ => preavisEssai
-  | ordinaire, j => preavisOrdinaire j
+  | _, j => preavis j
 
 /-- La phase dans laquelle une notification ouvre ce cadre de préavis. -/
 def phaseNotification : Cadre → Phase
@@ -101,6 +111,29 @@ def cause : Cadre → Partie → CauseFin
   | ordinaire, p => .resiliationOrdinaire p
 
 end Cadre
+
+/-! ## Délais de préavis -/
+
+/-- Les durées de préavis applicables : `D.duree p c j` est la durée, en jours,
+du préavis notifié par `p` dans le cadre `c` et reçu au jour `j`. -/
+structure Delais where
+  duree : Partie → Cadre → Jour → ℕ
+
+namespace Delais
+
+/-- Les délais légaux : la courbe `preavis`, pour les deux parties et dans les
+deux cadres. -/
+def legal : Delais := ⟨fun _ c j => c.duree j⟩
+
+/-- Des délais sont **admissibles** si le préavis dû par l'employeur n'est
+jamais plus court que le préavis légal. C'est tout ce que garantit la
+hiérarchie des normes : le préavis dû par le salarié, lui, peut être raccourci
+(P4 II). -/
+def Admissible (D : Delais) : Prop := ∀ c j, c.duree j ≤ D.duree .employeur c j
+
+theorem legal_admissible : legal.Admissible := fun _ _ => le_rfl
+
+end Delais
 
 /-! ## Transitions -/
 
@@ -132,12 +165,12 @@ def pasJour (k : Contrat) (s : Etat) : Etat :=
   | .termine .. => s
 
 /-- Réception d'une notification émise par `p`. -/
-def pasNotification (s : Etat) (p : Partie) : Etat :=
+def pasNotification (D : Delais) (s : Etat) (p : Partie) : Etat :=
   match s.phase with
-  | .essai => { s with phase := .preavis p .essai preavisEssai }
+  | .essai => { s with phase := .preavis p .essai (D.duree p .essai s.jour) }
   | .actif =>
     if s.protection = true ∧ p = .employeur then s  -- congé nul (P8)
-    else { s with phase := .preavis p .ordinaire (preavisOrdinaire s.jour) }
+    else { s with phase := .preavis p .ordinaire (D.duree p .ordinaire s.jour) }
   | _ => s
 
 /-- Fin immédiate de la relation, le jour même. -/
@@ -153,39 +186,52 @@ def proteger (s : Etat) (b : Bool) : Etat :=
   | _ => { s with protection := b }
 
 /-- Une transition de la machine à états. -/
-def pas {I : Interpretation} (k : Contrat) (s : Etat) : Evenement I → Etat
+def pas {I : Interpretation} (k : Contrat) (D : Delais) (s : Etat) : Evenement I → Etat
   | .jourPasse => pasJour k s
-  | .notification p => pasNotification s p
+  | .notification p => pasNotification D s p
   | .resiliationImmediate p _ _ => terminer s (.resiliationImmediate p)
   | .accordCommun => terminer s .accordCommun
   | .deces => terminer s .deces
   | .debutProtection => proteger s true
   | .finProtection => proteger s false
 
-/-- L'état atteint après une suite d'événements. -/
-def execute {I : Interpretation} (k : Contrat) (evs : List (Evenement I)) : Etat :=
-  evs.foldl (pas k) (initial k)
+/-- L'état atteint après une suite d'événements, avec les délais `D`. -/
+def execute {I : Interpretation} (k : Contrat) (D : Delais) (evs : List (Evenement I)) : Etat :=
+  evs.foldl (pas k D) (initial k)
 
 variable {I : Interpretation}
 
-@[simp] theorem execute_nil (k : Contrat) : execute k ([] : List (Evenement I)) = initial k := rfl
+variable (D : Delais)
+
+@[simp] theorem execute_nil (k : Contrat) : execute k D ([] : List (Evenement I)) = initial k := rfl
 
 theorem execute_snoc (k : Contrat) (evs : List (Evenement I)) (e : Evenement I) :
-    execute k (evs ++ [e]) = pas k (execute k evs) e := by
+    execute k D (evs ++ [e]) = pas k D (execute k D evs) e := by
+  simp [execute, List.foldl_append]
+
+theorem execute_append_cons (k : Contrat) (pre post : List (Evenement I)) (e : Evenement I) :
+    execute k D (pre ++ e :: post) = post.foldl (pas k D) (pas k D (execute k D pre) e) := by
   simp [execute, List.foldl_append]
 
 /-! ## Propriétés locales -/
 
 /-- Une relation terminée le reste. -/
 theorem termine_stable (k : Contrat) {s : Etat} {c : CauseFin} {j : Jour}
-    (hs : s.phase = .termine c j) (e : Evenement I) : pas k s e = s := by
+    (hs : s.phase = .termine c j) (e : Evenement I) : pas k D s e = s := by
   cases e <;> simp [pas, pasJour, pasNotification, terminer, proteger, hs]
+
+/-- Aucune suite d'événements ne fait sortir d'une relation terminée. -/
+theorem foldl_termine (k : Contrat) {s : Etat} {c : CauseFin} {j : Jour}
+    (hs : s.phase = .termine c j) (evs : List (Evenement I)) : evs.foldl (pas k D) s = s := by
+  induction evs with
+  | nil => rfl
+  | cons e evs ih => rw [List.foldl_cons, termine_stable D k hs e, ih]
 
 /-- **Pas de terme (P1).** Le seul écoulement du temps ne met jamais fin à une
 relation en essai ou en cours : il faut un préavis, un juste motif, un accord
 ou un décès. -/
 theorem pas_de_terme (k : Contrat) {s : Etat} (hs : s.phase = .essai ∨ s.phase = .actif) :
-    ∀ c j, (pas (I := I) k s .jourPasse).phase ≠ .termine c j := by
+    ∀ c j, (pas (I := I) k D s .jourPasse).phase ≠ .termine c j := by
   intro c j
   rcases hs with hs | hs
   · simp only [pas, pasJour, hs]; split_ifs <;> simp
@@ -194,20 +240,20 @@ theorem pas_de_terme (k : Contrat) {s : Etat} (hs : s.phase = .essai ∨ s.phase
 /-- **Nullité du congé (P8).** Pendant une protection, la notification de
 l'employeur est sans effet. -/
 theorem protection_nullite (k : Contrat) {s : Etat} (hs : s.phase = .actif)
-    (hp : s.protection = true) : pas (I := I) k s (.notification .employeur) = s := by
+    (hp : s.protection = true) : pas (I := I) k D s (.notification .employeur) = s := by
   simp [pas, pasNotification, hs, hp]
 
 /-- **Suspension du préavis (P8).** Pendant une protection, le décompte d'un
 préavis ordinaire de l'employeur ne progresse pas. -/
 theorem protection_suspend (k : Contrat) {s : Etat} {r : ℕ}
     (hs : s.phase = .preavis .employeur .ordinaire r) (hp : s.protection = true) :
-    (pas (I := I) k s .jourPasse).phase = s.phase := by
+    (pas (I := I) k D s .jourPasse).phase = s.phase := by
   simp [pas, pasJour, hs, suspendu, hp]
 
 /-- La protection ne bride pas le salarié : il peut toujours démissionner. -/
 theorem protection_salarie_libre (k : Contrat) {s : Etat} (hs : s.phase = .actif) :
-    (pas (I := I) k s (.notification .salarie)).phase
-      = .preavis .salarie .ordinaire (preavisOrdinaire s.jour) := by
+    (pas (I := I) k D s (.notification .salarie)).phase
+      = .preavis .salarie .ordinaire (D.duree .salarie .ordinaire s.jour) := by
   simp [pas, pasNotification, hs]
 
 /-! ## Invariants -/
@@ -218,14 +264,14 @@ la date de réception plus les jours déjà courus. -/
 def PreavisServi (k : Contrat) (evs : List (Evenement I)) (p : Partie) (c : Cadre)
     (fin r : ℕ) : Prop :=
   ∃ pre post, evs = pre ++ Evenement.notification p :: post ∧
-    (execute k pre).phase = c.phaseNotification ∧
-    r ≤ c.duree (execute k pre).jour ∧
-    (execute k pre).jour + (c.duree (execute k pre).jour - r) ≤ fin
+    (execute k D pre).phase = c.phaseNotification ∧
+    r ≤ D.duree p c (execute k D pre).jour ∧
+    (execute k D pre).jour + (D.duree p c (execute k D pre).jour - r) ≤ fin
 
 /-- Ce qui justifie qu'une relation ait pris fin pour la cause `c`. -/
 def FinJustifiee (k : Contrat) (evs : List (Evenement I)) : CauseFin → Jour → Prop
-  | .ruptureEssai p, j => PreavisServi k evs p .essai j 0
-  | .resiliationOrdinaire p, j => PreavisServi k evs p .ordinaire j 0
+  | .ruptureEssai p, j => PreavisServi D k evs p .essai j 0
+  | .resiliationOrdinaire p, j => PreavisServi D k evs p .ordinaire j 0
   | .resiliationImmediate p, _ => ∃ f h, Evenement.resiliationImmediate (I := I) p f h ∈ evs
   | .accordCommun, _ => Evenement.accordCommun (I := I) ∈ evs
   | .deces, _ => Evenement.deces (I := I) ∈ evs
@@ -234,20 +280,20 @@ def FinJustifiee (k : Contrat) (evs : List (Evenement I)) : CauseFin → Jour �
 def Justifie (k : Contrat) (evs : List (Evenement I)) (s : Etat) : Prop :=
   match s.phase with
   | .essai | .actif => True
-  | .preavis p c r => PreavisServi k evs p c s.jour r
-  | .termine c j => FinJustifiee k evs c j
+  | .preavis p c r => PreavisServi D k evs p c s.jour r
+  | .termine c j => FinJustifiee D k evs c j
 
 theorem PreavisServi.snoc {k : Contrat} {evs : List (Evenement I)} {p : Partie} {c : Cadre}
-    {fin r : ℕ} (h : PreavisServi k evs p c fin r) (e : Evenement I) {fin' : ℕ}
-    (hfin : fin ≤ fin') : PreavisServi k (evs ++ [e]) p c fin' r := by
+    {fin r : ℕ} (h : PreavisServi D k evs p c fin r) (e : Evenement I) {fin' : ℕ}
+    (hfin : fin ≤ fin') : PreavisServi D k (evs ++ [e]) p c fin' r := by
   obtain ⟨pre, post, rfl, h1, h2, h3⟩ := h
   exact ⟨pre, post ++ [e], by simp, h1, h2, by omega⟩
 
 theorem FinJustifiee.snoc {k : Contrat} {evs : List (Evenement I)} {c : CauseFin} {j : Jour}
-    (h : FinJustifiee k evs c j) (e : Evenement I) : FinJustifiee k (evs ++ [e]) c j := by
+    (h : FinJustifiee D k evs c j) (e : Evenement I) : FinJustifiee D k (evs ++ [e]) c j := by
   cases c with
-  | ruptureEssai p => exact PreavisServi.snoc h e le_rfl
-  | resiliationOrdinaire p => exact PreavisServi.snoc h e le_rfl
+  | ruptureEssai p => exact PreavisServi.snoc D h e le_rfl
+  | resiliationOrdinaire p => exact PreavisServi.snoc D h e le_rfl
   | resiliationImmediate p =>
     obtain ⟨f, hf, hm⟩ := h
     exact ⟨f, hf, List.mem_append_left _ hm⟩
@@ -257,19 +303,19 @@ theorem FinJustifiee.snoc {k : Contrat} {evs : List (Evenement I)} {c : CauseFin
 /-- Un événement qui ne change pas la phase et ne fait pas reculer le jour
 préserve l'invariant. -/
 theorem Justifie.snoc {k : Contrat} {evs : List (Evenement I)} {s s' : Etat}
-    (h : Justifie k evs s) (e : Evenement I) (hp : s'.phase = s.phase)
-    (hj : s.jour ≤ s'.jour) : Justifie k (evs ++ [e]) s' := by
+    (h : Justifie D k evs s) (e : Evenement I) (hp : s'.phase = s.phase)
+    (hj : s.jour ≤ s'.jour) : Justifie D k (evs ++ [e]) s' := by
   unfold Justifie at h ⊢
   rw [hp]
   rcases hph : s.phase with _ | _ | ⟨p, c, r⟩ | ⟨c, j⟩ <;> rw [hph] at h
   · trivial
   · trivial
-  · exact PreavisServi.snoc h e hj
-  · exact FinJustifiee.snoc h e
+  · exact PreavisServi.snoc D h e hj
+  · exact FinJustifiee.snoc D h e
 
 /-- Une relation n'est en cours (après l'essai) qu'une fois l'essai écoulé. -/
 theorem actif_apres_essai (k : Contrat) (evs : List (Evenement I)) :
-    (execute k evs).phase = .actif → k.dureeEssai ≤ (execute k evs).jour := by
+    (execute k D evs).phase = .actif → k.dureeEssai ≤ (execute k D evs).jour := by
   induction evs using List.reverseRecOn with
   | nil =>
     intro h
@@ -278,7 +324,7 @@ theorem actif_apres_essai (k : Contrat) (evs : List (Evenement I)) :
     omega
   | append_singleton evs e ih =>
     rw [execute_snoc]
-    generalize execute k evs = s at ih
+    generalize execute k D evs = s at ih
     intro h
     obtain ⟨j, ph, pr⟩ := s
     cases e <;> rcases ph with _ | _ | ⟨p, c, _ | r⟩ | ⟨c, j'⟩ <;>
@@ -288,14 +334,14 @@ theorem actif_apres_essai (k : Contrat) (evs : List (Evenement I)) :
 
 /-- **L'invariant est vrai après toute suite d'événements.** -/
 theorem justifie_execute (k : Contrat) (evs : List (Evenement I)) :
-    Justifie k evs (execute k evs) := by
+    Justifie D k evs (execute k D evs) := by
   induction evs using List.reverseRecOn with
   | nil =>
     simp only [execute_nil, initial]
     split_ifs <;> simp [Justifie]
   | append_singleton evs e ih =>
     rw [execute_snoc]
-    generalize hs : execute k evs = s at ih
+    generalize hs : execute k D evs = s at ih
     cases e with
     | jourPasse =>
       rcases hph : s.phase with _ | _ | ⟨p, c, r⟩ | ⟨c, j⟩
@@ -304,121 +350,143 @@ theorem justifie_execute (k : Contrat) (evs : List (Evenement I)) :
       · simp only [Justifie, hph] at ih
         simp only [pas, pasJour, hph]
         split
-        · exact Justifie.snoc (s := s) (by simp only [Justifie, hph]; exact ih) _
+        · exact Justifie.snoc D (s := s) (by simp only [Justifie, hph]; exact ih) _
             (by simp [hph]) (by simp)
         · split
           · simp only [Justifie]
             cases c
-            · exact ih.snoc _ le_rfl
-            · exact ih.snoc _ le_rfl
+            · exact ih.snoc D _ le_rfl
+            · exact ih.snoc D _ le_rfl
           · rename_i r
             simp only [Justifie]
             obtain ⟨pre, post, he, h1, h2, h3⟩ := ih
             exact ⟨pre, post ++ [.jourPasse], by simp [he], h1, by omega, by omega⟩
       · simp only [pas, pasJour, hph]
-        exact Justifie.snoc (s := s) ih _ rfl le_rfl
+        exact Justifie.snoc D (s := s) ih _ rfl le_rfl
     | notification p =>
       rcases hph : s.phase with _ | _ | ⟨q, c, r⟩ | ⟨c, j⟩
       · simp only [Justifie, pas, pasNotification, hph]
         exact ⟨evs, [], by simp, by simp [hs, hph, Cadre.phaseNotification],
-          by simp [Cadre.duree], by simp [hs, Cadre.duree]⟩
+          by simp [hs], by simp [hs]⟩
       · simp only [pas, pasNotification, hph]
         split
         · simp only [Justifie, hph]
         · simp only [Justifie]
           exact ⟨evs, [], by simp, by simp [hs, hph, Cadre.phaseNotification],
-            by simp [hs, Cadre.duree], by simp [hs, Cadre.duree]⟩
+            by simp [hs], by simp [hs]⟩
       · simp only [pas, pasNotification, hph]
-        exact Justifie.snoc ih _ rfl le_rfl
+        exact Justifie.snoc D ih _ rfl le_rfl
       · simp only [pas, pasNotification, hph]
-        exact Justifie.snoc ih _ rfl le_rfl
+        exact Justifie.snoc D ih _ rfl le_rfl
     | resiliationImmediate p f hf =>
       simp only [pas, terminer]
       split
-      · exact Justifie.snoc ih _ rfl le_rfl
+      · exact Justifie.snoc D ih _ rfl le_rfl
       · simp only [Justifie, FinJustifiee]; exact ⟨f, hf, by simp⟩
     | accordCommun =>
       simp only [pas, terminer]
       split
-      · exact Justifie.snoc ih _ rfl le_rfl
+      · exact Justifie.snoc D ih _ rfl le_rfl
       · simp [Justifie, FinJustifiee]
     | deces =>
       simp only [pas, terminer]
       split
-      · exact Justifie.snoc ih _ rfl le_rfl
+      · exact Justifie.snoc D ih _ rfl le_rfl
       · simp [Justifie, FinJustifiee]
     | debutProtection =>
       simp only [pas, proteger]
       split
-      · exact Justifie.snoc ih _ rfl le_rfl
-      · exact Justifie.snoc ih _ rfl le_rfl
+      · exact Justifie.snoc D ih _ rfl le_rfl
+      · exact Justifie.snoc D ih _ rfl le_rfl
     | finProtection =>
       simp only [pas, proteger]
       split
-      · exact Justifie.snoc ih _ rfl le_rfl
-      · exact Justifie.snoc ih _ rfl le_rfl
+      · exact Justifie.snoc D ih _ rfl le_rfl
+      · exact Justifie.snoc D ih _ rfl le_rfl
 
 /-! ## Théorèmes -/
 
-/-- **T-PREAVIS.** Pour toute interprétation des notions ouvertes et toute suite
-d'événements, une relation terminée l'a été pour une cause justifiée : un
-préavis effectivement couru, un juste motif, un accord écrit ou un décès. -/
+/-- **T-PREAVIS.** Pour toute interprétation des notions ouvertes, tous délais
+et toute suite d'événements, une relation terminée l'a été pour une cause
+justifiée : un préavis effectivement couru, un juste motif, un accord écrit ou
+un décès. -/
 theorem fin_justifiee (k : Contrat) (evs : List (Evenement I)) {c : CauseFin} {j : Jour}
-    (h : (execute k evs).phase = .termine c j) : FinJustifiee k evs c j := by
-  have := justifie_execute k evs
+    (h : (execute k D evs).phase = .termine c j) : FinJustifiee D k evs c j := by
+  have := justifie_execute D k evs
   unfold Justifie at this
   rw [h] at this
   exact this
 
 /-- Une résiliation ordinaire suppose une notification reçue après l'essai, et
 le dernier jour de la relation tombe au plus tôt à la date de réception plus
-le préavis légal. -/
+le préavis applicable. -/
 theorem fin_resiliationOrdinaire (k : Contrat) (evs : List (Evenement I)) {p : Partie}
-    {j : Jour} (h : (execute k evs).phase = .termine (.resiliationOrdinaire p) j) :
+    {j : Jour} (h : (execute k D evs).phase = .termine (.resiliationOrdinaire p) j) :
     ∃ pre post, evs = pre ++ Evenement.notification p :: post ∧
-      (execute k pre).phase = .actif ∧
-      (execute k pre).jour + preavisOrdinaire (execute k pre).jour ≤ j := by
-  obtain ⟨pre, post, he, h1, -, h3⟩ := fin_justifiee k evs h
-  exact ⟨pre, post, he, h1, by simpa [Cadre.duree] using h3⟩
+      (execute k D pre).phase = .actif ∧
+      (execute k D pre).jour + D.duree p .ordinaire (execute k D pre).jour ≤ j := by
+  obtain ⟨pre, post, he, h1, -, h3⟩ := fin_justifiee D k evs h
+  exact ⟨pre, post, he, h1, by simpa using h3⟩
 
 /-- Une rupture d'essai suppose une notification reçue pendant l'essai, suivie
-de 7 jours de préavis. -/
+du préavis d'essai applicable. -/
 theorem fin_ruptureEssai (k : Contrat) (evs : List (Evenement I)) {p : Partie}
-    {j : Jour} (h : (execute k evs).phase = .termine (.ruptureEssai p) j) :
+    {j : Jour} (h : (execute k D evs).phase = .termine (.ruptureEssai p) j) :
     ∃ pre post, evs = pre ++ Evenement.notification p :: post ∧
-      (execute k pre).phase = .essai ∧ (execute k pre).jour + preavisEssai ≤ j := by
-  obtain ⟨pre, post, he, h1, -, h3⟩ := fin_justifiee k evs h
-  exact ⟨pre, post, he, h1, by simpa [Cadre.duree] using h3⟩
+      (execute k D pre).phase = .essai ∧
+      (execute k D pre).jour + D.duree p .essai (execute k D pre).jour ≤ j := by
+  obtain ⟨pre, post, he, h1, -, h3⟩ := fin_justifiee D k evs h
+  exact ⟨pre, post, he, h1, by simpa using h3⟩
 
 /-- Une résiliation immédiate suppose un juste motif (P9), quelle que soit la
 façon dont le juge l'apprécie. -/
 theorem fin_resiliationImmediate (k : Contrat) (evs : List (Evenement I)) {p : Partie}
-    {j : Jour} (h : (execute k evs).phase = .termine (.resiliationImmediate p) j) :
+    {j : Jour} (h : (execute k D evs).phase = .termine (.resiliationImmediate p) j) :
     ∃ f, I.justeMotif f := by
-  obtain ⟨f, hf, -⟩ := fin_justifiee k evs h
+  obtain ⟨f, hf, -⟩ := fin_justifiee D k evs h
   exact ⟨f, hf⟩
 
-/-- **Durée minimale (P1).** Une relation qui prend fin par résiliation
-ordinaire dure au moins « durée d'essai + 30 jours ». -/
-theorem duree_minimale (k : Contrat) (evs : List (Evenement I)) {p : Partie} {j : Jour}
-    (h : (execute k evs).phase = .termine (.resiliationOrdinaire p) j) :
-    k.dureeEssai + 30 ≤ j := by
-  obtain ⟨pre, -, -, h1, h3⟩ := fin_resiliationOrdinaire k evs h
-  have := actif_apres_essai k pre h1
-  have := preavisOrdinaire_ge_30 (execute k pre).jour
+/-- Durée minimale, sous une hypothèse explicite : si le préavis ordinaire de
+`p` n'est jamais plus court que le préavis légal, une résiliation ordinaire
+par `p` intervient au plus tôt à « durée d'essai + préavis légal à la fin de
+l'essai ». -/
+theorem duree_minimale_of (k : Contrat) (evs : List (Evenement I)) {p : Partie} {j : Jour}
+    (hD : ∀ j, preavis j ≤ D.duree p .ordinaire j)
+    (h : (execute k D evs).phase = .termine (.resiliationOrdinaire p) j) :
+    k.dureeEssai + preavis k.dureeEssai ≤ j := by
+  obtain ⟨pre, -, -, h1, h3⟩ := fin_resiliationOrdinaire D k evs h
+  have he := actif_apres_essai D k pre h1
+  have := preavis_monotone he
+  have := hD (execute k D pre).jour
   omega
+
+/-- **Durée minimale (P1).** Pour tous délais admissibles, donc quels que
+soient l'accord d'entreprise et le contrat, un licenciement ordinaire
+intervient au plus tôt à « durée d'essai + préavis légal à la fin de
+l'essai » : 60 jours avec l'essai de 30 jours par défaut. -/
+theorem duree_minimale (k : Contrat) (evs : List (Evenement I)) {D : Delais}
+    (hD : D.Admissible) {j : Jour}
+    (h : (execute k D evs).phase = .termine (.resiliationOrdinaire .employeur) j) :
+    k.dureeEssai + preavis k.dureeEssai ≤ j :=
+  duree_minimale_of D k evs (fun j => hD .ordinaire j) h
+
+/-- Avec les délais légaux, la durée minimale vaut aussi pour la démission. -/
+theorem duree_minimale_legal (k : Contrat) (evs : List (Evenement I)) {p : Partie} {j : Jour}
+    (h : (execute k Delais.legal evs).phase = .termine (.resiliationOrdinaire p) j) :
+    k.dureeEssai + preavis k.dureeEssai ≤ j :=
+  duree_minimale_of Delais.legal k evs (fun _ => le_rfl) h
 
 /-- **Pas de préavis anticipé (P1).** Un préavis ordinaire en cours a été
 notifié après la fin de l'essai. -/
 theorem preavis_ordinaire_apres_essai (k : Contrat) (evs : List (Evenement I)) {p : Partie}
-    {r : ℕ} (h : (execute k evs).phase = .preavis p .ordinaire r) :
+    {r : ℕ} (h : (execute k D evs).phase = .preavis p .ordinaire r) :
     ∃ pre post, evs = pre ++ Evenement.notification p :: post ∧
-      k.dureeEssai ≤ (execute k pre).jour := by
-  have := justifie_execute k evs
+      k.dureeEssai ≤ (execute k D pre).jour := by
+  have := justifie_execute D k evs
   unfold Justifie at this
   rw [h] at this
   obtain ⟨pre, post, he, h1, -⟩ := this
-  exact ⟨pre, post, he, actif_apres_essai k pre h1⟩
+  exact ⟨pre, post, he, actif_apres_essai D k pre h1⟩
 
 /-! ## Exemples -/
 
@@ -434,23 +502,23 @@ def contratType : Contrat :=
 /-- `n` jours qui passent. -/
 def jours (n : ℕ) : List (Evenement interpretationVide) := List.replicate n .jourPasse
 
-/-- Licenciement reçu au jour 400 (1 an révolu) : 60 jours de préavis,
+/-- Licenciement reçu au jour 400 (1 an et 35 jours) : 60 jours de préavis,
 dernier jour 460. -/
-example : (execute contratType (jours 400 ++ [.notification .employeur] ++ jours 61)).phase
+example : (execute contratType Delais.legal (jours 400 ++ [.notification .employeur] ++ jours 61)).phase
     = .termine (.resiliationOrdinaire .employeur) 460 := by
   decide +kernel
 
 /-- Même licenciement, avec 10 jours d'incapacité pendant le préavis :
 le préavis est prolongé d'autant, dernier jour 470. -/
-example : (execute contratType (jours 400 ++ [.notification .employeur] ++ jours 10 ++
+example : (execute contratType Delais.legal (jours 400 ++ [.notification .employeur] ++ jours 10 ++
     [.debutProtection] ++ jours 10 ++ [.finProtection] ++ jours 51)).phase
     = .termine (.resiliationOrdinaire .employeur) 470 := by
   decide +kernel
 
-/-- Rupture d'essai reçue au jour 28 : le préavis de 7 jours déborde après la
-fin de l'essai (jour 30), dernier jour 35. -/
-example : (execute contratType (jours 28 ++ [.notification .salarie] ++ jours 8)).phase
-    = .termine (.ruptureEssai .salarie) 35 := by
+/-- Rupture d'essai reçue au jour 28 : le préavis de 28 jours déborde après la
+fin de l'essai (jour 30), dernier jour 56. -/
+example : (execute contratType Delais.legal (jours 28 ++ [.notification .salarie] ++ jours 29)).phase
+    = .termine (.ruptureEssai .salarie) 56 := by
   decide +kernel
 
 end Prouvhommes

@@ -15,8 +15,11 @@ L'indemnité n'est due qu'en cas de résiliation ordinaire par l'employeur.
 
 Résultats principaux :
 * `indemniteRupture_le_plafond` (**T-PLAFOND**) : jamais plus de 6 mois de `SR` ;
-* `indemniteRupture_manipulation` (**T-MANIP**) : baisser le dernier salaire de
-  `Δ` baisse l'indemnité de moins de `Δ/4 + 1` centime.
+* `indemniteRupture_manipulation` (**T-MANIP**) : après 5 ans à temps plein,
+  baisser le dernier salaire de `Δ` baisse l'indemnité de moins de
+  `3Δ/11 + 1` centime ;
+* `indemnite_saut_mensuel` : un mois d'ancienneté de plus augmente l'indemnité
+  de moins de `3/80` du salaire de référence, plus un centime.
 -/
 
 namespace Prouvhommes
@@ -134,6 +137,38 @@ theorem indemnite_lipschitz {sr d : ℚ} (hsr : 0 ≤ sr) (hd : 0 ≤ d) (m : Mo
   unfold indemnite
   linarith
 
+/-- Un mois d'ancienneté de plus fait avancer la fraction d'au plus `1/240`. -/
+theorem fractionAnciennete_succ_le (m : Mois) :
+    fractionAnciennete (m + 1) ≤ fractionAnciennete m + 1 / 240 := by
+  unfold fractionAnciennete ancienneteSaturation
+  have : ((min (m + 1) 240 : ℕ) : ℚ) ≤ (min m 240 : ℕ) + 1 := by
+    exact_mod_cast (by omega : min (m + 1) 240 ≤ min m 240 + 1)
+  rw [div_add' _ _ _ (by norm_num), div_le_div_iff_of_pos_right (by norm_num)]
+  linarith
+
+/-- Un mois d'ancienneté de plus augmente le coefficient d'au plus
+`6 × 3/2 × 1/240 = 3/80` mois de salaire de référence. -/
+theorem coefficient_succ_le (m : Mois) : coefficient (m + 1) ≤ coefficient m + 3 / 80 := by
+  unfold coefficient plafondMois
+  have h1 := smoothstep_sub_le (fractionAnciennete_mono (Nat.le_succ m))
+  have h2 := fractionAnciennete_succ_le m
+  linarith
+
+/-- **Pas d'effet de seuil.** Un mois d'ancienneté de plus augmente l'indemnité
+de moins de `3/80` du salaire de référence (moins de 4 %), plus un centime
+d'arrondi. Il n'y a donc aucun mois où retarder ou avancer un licenciement
+change beaucoup l'indemnité. Le préavis obéit à la même règle
+(`preavis_succ_le`). -/
+theorem indemnite_saut_mensuel {sr : ℚ} (hsr : 0 ≤ sr) (m : Mois) :
+    (indemnite sr (m + 1) : ℚ) < indemnite sr m + 3 / 80 * sr + 1 := by
+  have h := floor_lt_floor_add (indemniteQ_nonneg hsr (m + 1)) (indemniteQ sr m)
+  have hc : indemniteQ sr (m + 1) - indemniteQ sr m ≤ 3 / 80 * sr := by
+    unfold indemniteQ
+    have := mul_le_mul_of_nonneg_left (coefficient_succ_le m) hsr
+    nlinarith
+  unfold indemnite
+  linarith
+
 /-! ## Cas où l'indemnité est due -/
 
 /-- L'indemnité n'est due qu'en cas de résiliation ordinaire par l'employeur (P6). -/
@@ -151,15 +186,15 @@ theorem indemniteDue_iff (c : CauseFin) :
   | deces => simp [indemniteDue]
 
 /-- **Indemnité de rupture effectivement versée**, en centimes, à partir de
-l'historique des salaires mensuels, de l'ancienneté en mois et de la cause de
-la fin du contrat. -/
-def indemniteRupture (h : List Centimes) (m : Mois) (c : CauseFin) : Centimes :=
+l'historique des mois (salaire et activité), de l'ancienneté en mois et de la
+cause de la fin du contrat. -/
+def indemniteRupture (h : List MoisTravaille) (m : Mois) (c : CauseFin) : Centimes :=
   if indemniteDue c then indemnite (salaireReference h) m else 0
 
 /-- Pas d'indemnité en cas de démission, de rupture d'essai, de résiliation
 immédiate pour juste motif, d'accord écrit ou de décès. -/
 theorem indemniteRupture_eq_zero {c : CauseFin} (hc : c ≠ .resiliationOrdinaire .employeur)
-    (h : List Centimes) (m : Mois) : indemniteRupture h m c = 0 := by
+    (h : List MoisTravaille) (m : Mois) : indemniteRupture h m c = 0 := by
   have : indemniteDue c = false := by
     cases hd : indemniteDue c
     · rfl
@@ -168,54 +203,52 @@ theorem indemniteRupture_eq_zero {c : CauseFin} (hc : c ≠ .resiliationOrdinair
 
 /-- **T-PLAFOND.** L'indemnité de rupture ne dépasse jamais 6 mois de salaire
 de référence. -/
-theorem indemniteRupture_le_plafond (h : List Centimes) (m : Mois) (c : CauseFin) :
+theorem indemniteRupture_le_plafond (h : List MoisTravaille) (m : Mois) (c : CauseFin) :
     (indemniteRupture h m c : ℚ) ≤ 6 * salaireReference h := by
   unfold indemniteRupture
   split
   · exact indemnite_le_plafond (salaireReference_nonneg h) m
   · simpa using salaireReference_nonneg h
 
-/-- **T-MANIP.** Soit un historique contenant au moins un mois payé, suivi
-d'un dernier mois payé `x + Δ`. Si l'employeur abaisse ce dernier salaire à
-`x`, l'indemnité baisse (au sens large), mais de moins de `Δ/4 + 1` centime.
-Exemple : une baisse de 1 000 € du dernier salaire coûte moins de 250,01 €
-d'indemnité. -/
-theorem indemniteRupture_manipulation (h : List Centimes) (hh : ∃ s ∈ h, s ≠ 0)
-    {x : Centimes} (hx : x ≠ 0) (Δ : ℕ) (m : Mois) (c : CauseFin) :
-    indemniteRupture (h ++ [x]) m c ≤ indemniteRupture (h ++ [x + Δ]) m c ∧
-      (indemniteRupture (h ++ [x + Δ]) m c : ℚ)
-        < indemniteRupture (h ++ [x]) m c + Δ / 4 + 1 := by
-  have hs := salaireReference_sensibilite h hh hx Δ
-  have hsr : salaireReference (h ++ [x + Δ]) = salaireReference (h ++ [x]) + Δ / 24 := by
+/-- **T-MANIP.** Pour un salarié à temps plein depuis au moins 5 ans, si
+l'employeur abaisse le dernier salaire de `x + Δ` à `x`, l'indemnité baisse
+(au sens large), mais de moins de `3Δ/11 + 1` centime. Exemple : une baisse
+de 1 000 € du dernier salaire coûte moins de 272,73 € d'indemnité. -/
+theorem indemniteRupture_manipulation (p r : List MoisTravaille)
+    (hr : ∀ y ∈ r, y.activite = 1) (hlen : 59 ≤ r.length)
+    (x Δ : ℕ) (m : Mois) (c : CauseFin) :
+    indemniteRupture (p ++ r ++ [.plein x]) m c ≤ indemniteRupture (p ++ r ++ [.plein (x + Δ)]) m c ∧
+      (indemniteRupture (p ++ r ++ [.plein (x + Δ)]) m c : ℚ)
+        < indemniteRupture (p ++ r ++ [.plein x]) m c + 3 * Δ / 11 + 1 := by
+  have hB : 11 / 12 ≤ masseActivite (p ++ r ++ [.plein x]) := by
+    rw [List.append_assoc]
+    refine masseActivite_ge_onze_douziemes p _ (fun y hy => ?_) (by simp; omega)
+    rcases List.mem_append.1 hy with hy | hy
+    · exact hr y hy
+    · simp at hy; subst hy; rfl
+  have hs := salaireReference_sensibilite (p ++ r) (.plein x) Δ
+  have heq : ({ MoisTravaille.plein x with salaire := (MoisTravaille.plein x).salaire + Δ }
+      : MoisTravaille) = .plein (x + Δ) := rfl
+  rw [heq] at hs
+  set d := alphaSR * Δ / masseActivite (p ++ r ++ [.plein x]) with hd
+  have hd0 : 0 ≤ d := by
+    rw [hd]; have := alphaSR_pos; positivity
+  have hdle : d ≤ Δ / 22 := by
+    rw [hd, div_le_iff₀ (by linarith)]
+    have hΔ : (0 : ℚ) ≤ Δ := by positivity
+    have := mul_le_mul_of_nonneg_left hB hΔ
+    simp only [alphaSR]
     linarith
+  have hsr : salaireReference (p ++ r ++ [.plein (x + Δ)])
+      = salaireReference (p ++ r ++ [.plein x]) + d := by linarith
   unfold indemniteRupture
   split
   · rw [hsr]
-    refine ⟨indemnite_mono_sr m (by simp; positivity), ?_⟩
-    have := indemnite_lipschitz (salaireReference_nonneg (h ++ [x]))
-      (show (0 : ℚ) ≤ Δ / 24 by positivity) m
-    have e : plafondMois * ((Δ : ℚ) / 24) = Δ / 4 := by norm_num [plafondMois]; ring
+    refine ⟨indemnite_mono_sr m (by linarith), ?_⟩
+    have := indemnite_lipschitz (salaireReference_nonneg (p ++ r ++ [.plein x])) hd0 m
+    unfold plafondMois at this
     linarith
-  · exact ⟨le_rfl, by simp only [Nat.cast_zero, zero_add]; positivity⟩
-
-/-! ## Exemples (charte, §5)
-
-Coefficients, en mois de salaire de référence. -/
-
-example : coefficient 12 = 87 / 2000 := by
-  norm_num [coefficient, fractionAnciennete, ancienneteSaturation, plafondMois, smoothstep]
-example : coefficient 60 = 15 / 16 := by
-  norm_num [coefficient, fractionAnciennete, ancienneteSaturation, plafondMois, smoothstep]
-example : coefficient 120 = 3 := by
-  norm_num [coefficient, fractionAnciennete, ancienneteSaturation, plafondMois, smoothstep]
-example : coefficient 180 = 81 / 16 := by
-  norm_num [coefficient, fractionAnciennete, ancienneteSaturation, plafondMois, smoothstep]
-example : coefficient 300 = 6 := coefficient_sature (by norm_num [ancienneteSaturation])
-
-/-- Salaire constant de 3 000 € pendant 10 ans, licenciement : 9 000 €. -/
-example :
-    indemniteRupture (List.replicate 120 300000) 120 (.resiliationOrdinaire .employeur)
-      = 900000 := by
-  decide +kernel
+  · simp only [Nat.cast_zero, le_refl, true_and]
+    positivity
 
 end Prouvhommes

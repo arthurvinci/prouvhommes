@@ -208,22 +208,15 @@ theorem applicable_dispositive_limite {d : Disposition α} (h : d.niveau = .disp
 
 /-! ## Les dispositions du code -/
 
-/-- Préavis ordinaire dû par l'employeur, pour une notification reçue au jour
-`j` (P4) : relative, plus long = plus favorable. -/
+/-- Préavis dû par l'employeur, pour une notification reçue au jour `j`
+(P3, P4) : relative, plus long = plus favorable. Le même pendant l'essai et
+après. -/
 def dispPreavisEmployeur (j : Jour) : Disposition ℕ :=
-  { niveau := .relative, loi := preavisOrdinaire j, sens := .plusGrand }
+  { niveau := .relative, loi := preavis j, sens := .plusGrand }
 
-/-- Préavis ordinaire dû par le salarié (P4) : relative, plus court = plus favorable. -/
+/-- Préavis dû par le salarié (P3, P4) : relative, plus court = plus favorable. -/
 def dispPreavisSalarie (j : Jour) : Disposition ℕ :=
-  { niveau := .relative, loi := preavisOrdinaire j, sens := .plusPetit }
-
-/-- Préavis de rupture d'essai dû par l'employeur (P3). -/
-def dispPreavisEssaiEmployeur : Disposition ℕ :=
-  { niveau := .relative, loi := preavisEssai, sens := .plusGrand }
-
-/-- Préavis de rupture d'essai dû par le salarié (P3). -/
-def dispPreavisEssaiSalarie : Disposition ℕ :=
-  { niveau := .relative, loi := preavisEssai, sens := .plusPetit }
+  { niveau := .relative, loi := preavis j, sens := .plusPetit }
 
 /-- Durée de l'essai (P3) : dispositive, 30 jours à défaut de stipulation,
 limite absolue de 90 jours. -/
@@ -237,17 +230,17 @@ def dispIndemnite (sr : ℚ) (m : Mois) : Disposition ℕ :=
 
 /-- Le préavis dû par l'employeur n'est jamais plus court que le préavis légal. -/
 theorem preavisEmployeur_ge_legal (j : Jour) (st : Stipulations ℕ) :
-    preavisOrdinaire j ≤ applicable (dispPreavisEmployeur j) st :=
+    preavis j ≤ applicable (dispPreavisEmployeur j) st :=
   applicable_relative_plancher (d := dispPreavisEmployeur j) rfl st
 
 /-- Le préavis dû par le salarié n'est jamais plus long que le préavis légal. -/
 theorem preavisSalarie_le_legal (j : Jour) (st : Stipulations ℕ) :
-    applicable (dispPreavisSalarie j) st ≤ preavisOrdinaire j :=
+    applicable (dispPreavisSalarie j) st ≤ preavis j :=
   applicable_relative_plancher (d := dispPreavisSalarie j) rfl st
 
 /-- Une clause qui allongerait le préavis du salarié démissionnaire est sans effet. -/
 theorem preavisSalarie_clause_allongee (j : Jour) (accord : Option ℕ) {c : ℕ}
-    (hc : preavisOrdinaire j ≤ c) :
+    (hc : preavis j ≤ c) :
     applicable (dispPreavisSalarie j) { accord := accord, contrat := some c }
       = applicable (dispPreavisSalarie j) { accord := accord } :=
   applicable_relative_clause_defavorable (d := dispPreavisSalarie j) rfl accord hc
@@ -281,12 +274,12 @@ example : applicable dispDureeEssai { accord := some 60, contrat := some 15 } = 
 /-- Contrat à 120 jours : réduit à 90. -/
 example : applicable dispDureeEssai { contrat := some 120 } = 90 := by decide
 
-/-- Préavis de l'employeur après 2 ans : 60 jours légaux, accord à 75, contrat
+/-- Préavis de l'employeur au jour 800 : 64 jours légaux, accord à 75, contrat
 à 45 : le plus favorable, 75. -/
 example : applicable (dispPreavisEmployeur 800) { accord := some 75, contrat := some 45 } = 75 := by
   decide
 
-/-- Préavis du salarié après 2 ans : 60 jours légaux, contrat à 90 (sans
+/-- Préavis du salarié au jour 800 : 64 jours légaux, contrat à 90 (sans
 effet), accord à 30 : 30. -/
 example : applicable (dispPreavisSalarie 800) { accord := some 30, contrat := some 90 } = 30 := by
   decide

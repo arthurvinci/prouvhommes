@@ -12,7 +12,6 @@ export const LAW_PARAMS = Object.freeze({
   capMonths: q(6), // plafondMois
   saturationMonths: 240, // ancienneteSaturation
   alpha: q(1, 24), // alphaSR
-  windowSize: 60, // tailleFenetre
 });
 
 /** smoothstep: S(t) = 3t² − 2t³ */
@@ -21,24 +20,32 @@ export const smoothstep = (t) => sub(mul(q(3), pow(t, 2)), mul(q(2), pow(t, 3)))
 /** pasEMA: e ↦ α·x + (1 − α)·e */
 const emaStep = (alpha, e, x) => add(mul(alpha, x), mul(sub(ONE, alpha), e));
 
-/** ema: initialised on the first element; 0 on the empty list. */
-export function ema(alpha, values) {
-  if (values.length === 0) return ZERO;
-  return values.slice(1).reduce((e, x) => emaStep(alpha, e, x), values[0]);
+/** sommeExp: exponential sum starting from 0. */
+export const expSum = (alpha, values) => values.reduce((e, x) => emaStep(alpha, e, x), ZERO);
+
+/**
+ * MoisTravaille: a month of the history, { salary: BigInt cents, activity:
+ * rational in [0, 1] }. A bare BigInt is a full month (activity 1) paid that
+ * amount (MoisTravaille.plein).
+ */
+export const fullMonth = (salary) => ({ salary: BigInt(salary), activity: ONE });
+/** MoisTravaille.suspendu: no activity, no salary. */
+export const SUSPENDED = Object.freeze({ salary: 0n, activity: ZERO });
+const asMonth = (m) => (typeof m === "bigint" ? fullMonth(m) : m);
+
+/** masseSalaires */
+export const salaryMass = (history, params = LAW_PARAMS) =>
+  expSum(params.alpha, history.map((m) => q(asMonth(m).salary)));
+
+/** masseActivite */
+export const activityMass = (history, params = LAW_PARAMS) =>
+  expSum(params.alpha, history.map((m) => asMonth(m).activity));
+
+/** salaireReference: salary mass / activity mass (0 without any activity). */
+export function referenceSalary(history, params = LAW_PARAMS) {
+  const b = activityMass(history, params);
+  return b.n === 0n ? ZERO : div(salaryMass(history, params), b);
 }
-
-/** moisPayes: months with a zero salary are left out. */
-export const paidMonths = (history) => history.filter((s) => s !== 0n);
-
-/** fenetre: the last `windowSize` paid months at most, as rationals. */
-export function salaryWindow(history, params = LAW_PARAMS) {
-  const paid = paidMonths(history);
-  return paid.slice(Math.max(0, paid.length - params.windowSize)).map((s) => q(s));
-}
-
-/** salaireReference: reference salary in cents, not rounded. */
-export const referenceSalary = (history, params = LAW_PARAMS) =>
-  ema(params.alpha, salaryWindow(history, params));
 
 /** fractionAnciennete: min(m, saturation) / saturation, in [0, 1]. */
 export const seniorityFraction = (months, params = LAW_PARAMS) =>

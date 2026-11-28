@@ -12,4 +12,5 @@ import Prouvhommes.TempsDeTravail
 import Prouvhommes.HeuresSup
 import Prouvhommes.Conges
 import Prouvhommes.PrincipesGeneraux
+import Prouvhommes.Modele
 import Prouvhommes.Vitrine

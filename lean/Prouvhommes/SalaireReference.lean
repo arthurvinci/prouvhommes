@@ -3,35 +3,64 @@ import Prouvhommes.Basic
 /-!
 # Salaire de référence (P6)
 
-Le salaire de référence `SR` est une moyenne mobile exponentielle (EMA) des
-salaires mensuels, de coefficient `α = 1/24`, calculée sur les 60 derniers mois
-payés.
+Le salaire de référence `SR` est une **moyenne pondérée des salaires ramenés à
+temps plein**, sur tout le contrat. Le poids d'un mois est son taux d'activité
+(la fraction du mois travaillée ou rémunérée, entre 0 et 1), multiplié par
+`α (1 − α)^k`, où `k` est le nombre de mois écoulés depuis et `α = 1/24`.
 
-* L'historique est la liste des salaires mensuels bruts, en centimes, du plus
-  ancien au plus récent.
-* Un mois sans salaire (valeur `0`) est exclu de la fenêtre, qui remonte d'autant.
-* Récurrence : `e₁ = s₁`, puis `eₖ = α·sₖ + (1 − α)·eₖ₋₁`.
+Concrètement, on tient deux moyennes exponentielles parties de 0, l'une des
+salaires versés, l'autre des taux d'activité, et on fait le quotient :
+
+* `Aₖ = α·sₖ + (1 − α)·Aₖ₋₁` (masse des salaires) ;
+* `Bₖ = α·τₖ + (1 − α)·Bₖ₋₁` (masse d'activité) ;
+* `SR = A / B` (et `0` si le contrat n'a jamais connu d'activité).
+
+Il n'y a ni fenêtre ni mois exclu, donc aucun effet de seuil :
+
+* un mois suspendu (`τ = 0`, salaire nul) ne compte pas ; un mois presque
+  suspendu compte presque pas (`salaireReference_mois_proche`) ;
+* un mois partiel payé au prorata ne change rien (`salaireReference_prorata`) ;
+* les mois anciens s'effacent progressivement, sans jamais sortir d'un coup.
 
 Résultats principaux :
-* `ema_encadrement` : l'EMA reste entre le plus petit et le plus grand salaire ;
-* `ema_sensibilite_position` : modifier un mois de `Δ` déplace l'EMA de
-  `α(1 − α)^k · Δ`, où `k` est le nombre de mois postérieurs ;
+* `salaireReference_encadrement` : `SR` est compris entre le plus petit et le
+  plus grand salaire ramené à temps plein ;
 * `salaireReference_sensibilite` : modifier le dernier salaire de `Δ` déplace
-  `SR` d'exactement `Δ / 24`, dès qu'il existe au moins un autre mois payé.
+  `SR` d'exactement `α Δ / B` ;
+* `masseActivite_ge` : après 60 mois à temps plein, `B ≥ 1 − (23/24)^60 > 11/12`,
+  donc le dernier salaire pèse moins de 1/22.
 -/
 
 namespace Prouvhommes
 
-/-! ## Moyenne mobile exponentielle -/
+/-! ## Mois de l'historique -/
+
+/-- Un mois de l'historique : salaire brut versé, en centimes, et taux
+d'activité (fraction du mois travaillée ou rémunérée, congés payés compris). -/
+structure MoisTravaille where
+  salaire : Centimes
+  activite : ℚ := 1
+  activite_nonneg : 0 ≤ activite := by norm_num
+  activite_le_one : activite ≤ 1 := by norm_num
+
+namespace MoisTravaille
+
+/-- Un mois entier travaillé, payé `s`. -/
+def plein (s : Centimes) : MoisTravaille := { salaire := s }
+
+/-- Un mois suspendu : ni activité, ni salaire. -/
+def suspendu : MoisTravaille := { salaire := 0, activite := 0 }
+
+end MoisTravaille
+
+/-! ## Sommes exponentielles -/
 
 /-- Un pas de la récurrence : `e ↦ α·x + (1 − α)·e`. -/
 def pasEMA (α e x : ℚ) : ℚ := α * x + (1 - α) * e
 
-/-- Moyenne mobile exponentielle d'une liste (du plus ancien au plus récent),
-initialisée sur le premier élément. Vaut `0` sur la liste vide. -/
-def ema (α : ℚ) : List ℚ → ℚ
-  | [] => 0
-  | s :: reste => reste.foldl (pasEMA α) s
+/-- Somme exponentielle d'une liste (du plus ancien au plus récent), partie de 0 :
+`Σ α (1 − α)^k xₖ`, où `k` compte les termes postérieurs. -/
+def sommeExp (α : ℚ) (l : List ℚ) : ℚ := l.foldl (pasEMA α) 0
 
 /-- La récurrence est affine en sa valeur initiale. -/
 theorem foldl_pasEMA_affine (α : ℚ) (r : List ℚ) (e : ℚ) :
@@ -43,167 +72,229 @@ theorem foldl_pasEMA_affine (α : ℚ) (r : List ℚ) (e : ℚ) :
     rw [ih (pasEMA α e y), ih (pasEMA α 0 y)]
     unfold pasEMA; ring
 
-/-- Ajouter un mois à la fin : `ema (l ++ [x]) = α·x + (1 − α)·ema l`. -/
-theorem ema_snoc (α : ℚ) {l : List ℚ} (hl : l ≠ []) (x : ℚ) :
-    ema α (l ++ [x]) = pasEMA α (ema α l) x := by
-  obtain ⟨s, r, rfl⟩ := List.exists_cons_of_ne_nil hl
-  simp [ema, List.foldl_append]
+theorem sommeExp_snoc (α : ℚ) (l : List ℚ) (x : ℚ) :
+    sommeExp α (l ++ [x]) = pasEMA α (sommeExp α l) x := by
+  simp [sommeExp, List.foldl_append]
 
-/-- Découpage autour d'un mois `z` : l'EMA de `l ++ z :: r` reprend la
-récurrence à partir de `pasEMA (ema l) z`. -/
-theorem ema_append_cons (α : ℚ) {l : List ℚ} (hl : l ≠ []) (z : ℚ) (r : List ℚ) :
-    ema α (l ++ z :: r) = r.foldl (pasEMA α) (pasEMA α (ema α l) z) := by
-  obtain ⟨s, l', rfl⟩ := List.exists_cons_of_ne_nil hl
-  simp [ema, List.foldl_append]
-
-/-- **Sensibilité à un mois quelconque (sauf le premier).** Ajouter `Δ` au mois
-suivi de `r.length` mois déplace l'EMA de `α (1 − α)^(r.length) Δ`. -/
-theorem ema_sensibilite_position (α : ℚ) {l : List ℚ} (hl : l ≠ []) (x Δ : ℚ)
-    (r : List ℚ) :
-    ema α (l ++ (x + Δ) :: r) - ema α (l ++ x :: r) = α * (1 - α) ^ r.length * Δ := by
-  rw [ema_append_cons α hl, ema_append_cons α hl, foldl_pasEMA_affine α r,
-    foldl_pasEMA_affine α r (pasEMA α (ema α l) x)]
-  unfold pasEMA; ring
-
-/-- Corollaire : pour `α ∈ [0, 1]` et `Δ ≥ 0`, le déplacement est compris entre
-`0` et `α Δ`. -/
-theorem ema_sensibilite_le {α : ℚ} (hα0 : 0 ≤ α) (hα1 : α ≤ 1) {l : List ℚ}
-    (hl : l ≠ []) (x : ℚ) {Δ : ℚ} (hΔ : 0 ≤ Δ) (r : List ℚ) :
-    0 ≤ ema α (l ++ (x + Δ) :: r) - ema α (l ++ x :: r) ∧
-      ema α (l ++ (x + Δ) :: r) - ema α (l ++ x :: r) ≤ α * Δ := by
-  rw [ema_sensibilite_position α hl]
-  have hp0 : 0 ≤ (1 - α) ^ r.length := pow_nonneg (by linarith) _
-  have hp1 : (1 - α) ^ r.length ≤ 1 := pow_le_one₀ (by linarith) (by linarith)
-  refine ⟨by positivity, ?_⟩
-  have : α * (1 - α) ^ r.length * Δ = α * Δ * (1 - α) ^ r.length := by ring
-  rw [this]
-  exact mul_le_of_le_one_right (mul_nonneg hα0 hΔ) hp1
-
-/-- Le dernier mois : déplacement d'exactement `α Δ`. -/
-theorem ema_sensibilite_dernier (α : ℚ) {l : List ℚ} (hl : l ≠ []) (x Δ : ℚ) :
-    ema α (l ++ [x + Δ]) - ema α (l ++ [x]) = α * Δ := by
-  have := ema_sensibilite_position α hl x Δ []
-  simpa using this
-
-/-- La récurrence reste dans tout intervalle `[m, M]` qui contient la valeur
-initiale et tous les termes. -/
-theorem foldl_pasEMA_mem_Icc {α : ℚ} (hα0 : 0 ≤ α) (hα1 : α ≤ 1) {m M : ℚ}
-    (r : List ℚ) (hr : ∀ x ∈ r, m ≤ x ∧ x ≤ M) {e : ℚ} (he : m ≤ e ∧ e ≤ M) :
-    m ≤ r.foldl (pasEMA α) e ∧ r.foldl (pasEMA α) e ≤ M := by
-  induction r generalizing e with
+/-- Positivité : partie d'une valeur positive ou nulle, sur des termes positifs
+ou nuls, la récurrence reste positive ou nulle. -/
+theorem foldl_pasEMA_nonneg {α : ℚ} (hα0 : 0 ≤ α) (hα1 : α ≤ 1) (l : List ℚ)
+    (hl : ∀ x ∈ l, 0 ≤ x) {e : ℚ} (he : 0 ≤ e) : 0 ≤ l.foldl (pasEMA α) e := by
+  induction l generalizing e with
   | nil => simpa using he
-  | cons y r ih =>
+  | cons y l ih =>
     simp only [List.foldl_cons]
-    apply ih (fun x hx => hr x (List.mem_cons_of_mem _ hx))
-    obtain ⟨hy1, hy2⟩ := hr y List.mem_cons_self
+    apply ih (fun x hx => hl x (List.mem_cons_of_mem _ hx))
+    have hy := hl y List.mem_cons_self
     unfold pasEMA
-    constructor <;> nlinarith [mul_le_mul_of_nonneg_left hy1 hα0,
-      mul_le_mul_of_nonneg_left hy2 hα0,
-      mul_le_mul_of_nonneg_left he.1 (show 0 ≤ 1 - α by linarith),
-      mul_le_mul_of_nonneg_left he.2 (show 0 ≤ 1 - α by linarith)]
+    have : 0 ≤ 1 - α := by linarith
+    positivity
 
-/-- **Encadrement.** L'EMA d'une liste non vide est comprise entre tout minorant
-et tout majorant de ses termes : c'est une moyenne pondérée. -/
-theorem ema_encadrement {α : ℚ} (hα0 : 0 ≤ α) (hα1 : α ≤ 1) {l : List ℚ}
-    (hl : l ≠ []) {m M : ℚ} (h : ∀ x ∈ l, m ≤ x ∧ x ≤ M) :
-    m ≤ ema α l ∧ ema α l ≤ M := by
-  obtain ⟨s, r, rfl⟩ := List.exists_cons_of_ne_nil hl
-  exact foldl_pasEMA_mem_Icc hα0 hα1 r (fun x hx => h x (List.mem_cons_of_mem _ hx))
-    (h s List.mem_cons_self)
+/-- Comparaison terme à terme : si `f ≤ g` sur chaque mois et au départ, la
+récurrence sur `f` reste sous la récurrence sur `g`. -/
+theorem foldl_pasEMA_le {α : ℚ} (hα0 : 0 ≤ α) (hα1 : α ≤ 1) {β : Type*} (l : List β)
+    (f g : β → ℚ) (hfg : ∀ x ∈ l, f x ≤ g x) {a b : ℚ} (hab : a ≤ b) :
+    (l.map f).foldl (pasEMA α) a ≤ (l.map g).foldl (pasEMA α) b := by
+  induction l generalizing a b with
+  | nil => simpa using hab
+  | cons y l ih =>
+    simp only [List.map_cons, List.foldl_cons]
+    apply ih (fun x hx => hfg x (List.mem_cons_of_mem _ hx))
+    have hy := hfg y List.mem_cons_self
+    unfold pasEMA
+    have h1 : 0 ≤ 1 - α := by linarith
+    nlinarith [mul_le_mul_of_nonneg_left hy hα0, mul_le_mul_of_nonneg_left hab h1]
 
-/-- L'EMA d'une liste de termes positifs ou nuls est positive ou nulle. -/
-theorem ema_nonneg {α : ℚ} (hα0 : 0 ≤ α) (hα1 : α ≤ 1) {l : List ℚ}
-    (h : ∀ x ∈ l, 0 ≤ x) : 0 ≤ ema α l := by
-  cases l with
-  | nil => simp [ema]
-  | cons s r =>
-    simp only [ema]
-    have key : ∀ (r : List ℚ), (∀ x ∈ r, 0 ≤ x) → ∀ e, 0 ≤ e → 0 ≤ r.foldl (pasEMA α) e := by
-      intro r
-      induction r with
-      | nil => intro _ e he; simpa using he
-      | cons y r ih =>
-        intro hr e he
-        simp only [List.foldl_cons]
-        apply ih (fun x hx => hr x (List.mem_cons_of_mem _ hx))
-        have hy := hr y List.mem_cons_self
-        unfold pasEMA
-        have : 0 ≤ 1 - α := by linarith
-        positivity
-    exact key r (fun x hx => h x (List.mem_cons_of_mem _ hx)) s (h s List.mem_cons_self)
+/-- Linéarité : multiplier tous les termes et la valeur initiale par `c`
+multiplie le résultat par `c`. -/
+theorem foldl_pasEMA_mul (α c : ℚ) {β : Type*} (l : List β) (g : β → ℚ) (b : ℚ) :
+    (l.map fun x => c * g x).foldl (pasEMA α) (c * b) = c * (l.map g).foldl (pasEMA α) b := by
+  induction l generalizing b with
+  | nil => simp
+  | cons y l ih =>
+    simp only [List.map_cons, List.foldl_cons]
+    rw [show pasEMA α (c * b) (c * g y) = c * pasEMA α b (g y) by unfold pasEMA; ring, ih]
 
-/-! ## Fenêtre et salaire de référence -/
+/-- Sur des termes tous égaux à 1 : `1 − (1 − α)^n (1 − e)`. -/
+theorem foldl_pasEMA_replicate_one (α : ℚ) (n : ℕ) (e : ℚ) :
+    (List.replicate n (1 : ℚ)).foldl (pasEMA α) e = 1 - (1 - α) ^ n * (1 - e) := by
+  induction n generalizing e with
+  | zero => simp
+  | succ n ih =>
+    rw [List.replicate_succ, List.foldl_cons, ih]
+    unfold pasEMA; ring
 
-/-- Coefficient de l'EMA (P6). -/
+/-! ## Salaire de référence -/
+
+/-- Coefficient des moyennes exponentielles (P6). -/
 def alphaSR : ℚ := 1 / 24
 
-/-- Taille maximale de la fenêtre, en mois payés (P6). -/
-def tailleFenetre : ℕ := 60
+theorem alphaSR_pos : 0 < alphaSR := by norm_num [alphaSR]
+theorem alphaSR_le_one : alphaSR ≤ 1 := by norm_num [alphaSR]
 
-/-- Les mois payés de l'historique (les mois à salaire nul sont exclus). -/
-def moisPayes (h : List Centimes) : List Centimes := h.filter (· ≠ 0)
+/-- Masse des salaires : somme exponentielle des salaires versés. -/
+def masseSalaires (h : List MoisTravaille) : ℚ :=
+  sommeExp alphaSR (h.map fun x => (x.salaire : ℚ))
 
-/-- Conversion d'une liste de montants en rationnels. -/
-def versQ (l : List Centimes) : List ℚ := List.map (fun s : ℕ => (s : ℚ)) l
+/-- Masse d'activité : somme exponentielle des taux d'activité. -/
+def masseActivite (h : List MoisTravaille) : ℚ :=
+  sommeExp alphaSR (h.map (·.activite))
 
-/-- La fenêtre : les 60 derniers mois payés au plus, convertis en rationnels. -/
-def fenetre (h : List Centimes) : List ℚ :=
-  versQ ((moisPayes h).drop ((moisPayes h).length - tailleFenetre))
+/-- **Salaire de référence** (P6), en centimes, non arrondi. Vaut `0` si le
+contrat n'a connu aucune activité (division par 0 dans `ℚ`). -/
+def salaireReference (h : List MoisTravaille) : ℚ := masseSalaires h / masseActivite h
 
-/-- **Salaire de référence** (P6), en centimes, non arrondi. -/
-def salaireReference (h : List Centimes) : ℚ := ema alphaSR (fenetre h)
+theorem masseSalaires_snoc (h : List MoisTravaille) (x : MoisTravaille) :
+    masseSalaires (h ++ [x]) = alphaSR * x.salaire + (1 - alphaSR) * masseSalaires h := by
+  simp [masseSalaires, sommeExp_snoc, pasEMA]
 
-theorem fenetre_length_le (h : List Centimes) : (fenetre h).length ≤ tailleFenetre := by
-  simp only [fenetre, versQ, List.length_map, List.length_drop]
-  omega
+theorem masseActivite_snoc (h : List MoisTravaille) (x : MoisTravaille) :
+    masseActivite (h ++ [x]) = alphaSR * x.activite + (1 - alphaSR) * masseActivite h := by
+  simp [masseActivite, sommeExp_snoc, pasEMA]
 
-/-- Un mois payé ajouté à la fin entre dans la fenêtre, à la dernière place ;
-le reste de la fenêtre ne dépend pas de son montant. -/
-theorem fenetre_snoc (h : List Centimes) {x : Centimes} (hx : x ≠ 0) :
-    fenetre (h ++ [x]) =
-      versQ ((moisPayes h).drop ((moisPayes h).length + 1 - tailleFenetre)) ++ [(x : ℚ)] := by
-  have hp : moisPayes (h ++ [x]) = moisPayes h ++ [x] := by
-    simp [moisPayes, List.filter_append, hx]
-  simp only [fenetre, hp, List.length_append, List.length_singleton]
-  rw [List.drop_append_of_le_length (by unfold tailleFenetre; omega)]
-  simp [versQ]
+theorem masseSalaires_nonneg (h : List MoisTravaille) : 0 ≤ masseSalaires h :=
+  foldl_pasEMA_nonneg alphaSR_pos.le alphaSR_le_one _
+    (fun x hx => by obtain ⟨m, -, rfl⟩ := List.mem_map.1 hx; positivity) le_rfl
 
-theorem salaireReference_nonneg (h : List Centimes) : 0 ≤ salaireReference h := by
-  refine ema_nonneg (by norm_num [alphaSR]) (by norm_num [alphaSR]) (fun x hx => ?_)
-  simp only [fenetre, versQ, List.mem_map] at hx
-  obtain ⟨s, -, rfl⟩ := hx
-  positivity
+theorem masseActivite_nonneg (h : List MoisTravaille) : 0 ≤ masseActivite h :=
+  foldl_pasEMA_nonneg alphaSR_pos.le alphaSR_le_one _
+    (fun x hx => by obtain ⟨m, -, rfl⟩ := List.mem_map.1 hx; exact m.activite_nonneg) le_rfl
 
-/-- `SR` ne dépasse jamais un majorant de tous les salaires de l'historique. -/
-theorem salaireReference_le {h : List Centimes} {M : ℚ} (hM0 : 0 ≤ M)
-    (hM : ∀ s ∈ h, (s : ℚ) ≤ M) : salaireReference h ≤ M := by
+theorem salaireReference_nonneg (h : List MoisTravaille) : 0 ≤ salaireReference h :=
+  div_nonneg (masseSalaires_nonneg h) (masseActivite_nonneg h)
+
+/-- **Encadrement.** Si chaque salaire, ramené à temps plein, est compris entre
+`m` et `M`, alors `SR` aussi : c'est une moyenne. -/
+theorem salaireReference_encadrement {h : List MoisTravaille} {m M : ℚ}
+    (hB : 0 < masseActivite h)
+    (hm : ∀ x ∈ h, m * x.activite ≤ x.salaire) (hM : ∀ x ∈ h, (x.salaire : ℚ) ≤ M * x.activite) :
+    m ≤ salaireReference h ∧ salaireReference h ≤ M := by
+  have hα0 := alphaSR_pos.le
+  have hα1 := alphaSR_le_one
+  have up : masseSalaires h ≤ M * masseActivite h := by
+    unfold masseSalaires masseActivite sommeExp
+    rw [← foldl_pasEMA_mul, mul_zero]
+    exact foldl_pasEMA_le hα0 hα1 h _ _ hM le_rfl
+  have lo : m * masseActivite h ≤ masseSalaires h := by
+    unfold masseSalaires masseActivite sommeExp
+    rw [← foldl_pasEMA_mul, mul_zero]
+    exact foldl_pasEMA_le hα0 hα1 h _ _ hm le_rfl
   unfold salaireReference
-  by_cases hw : fenetre h = []
-  · simp [hw, ema, hM0]
-  · refine (ema_encadrement (by norm_num [alphaSR]) (by norm_num [alphaSR]) hw
-      (m := 0) (M := M) (fun x hx => ?_)).2
-    simp only [fenetre, versQ, List.mem_map] at hx
-    obtain ⟨s, hs, rfl⟩ := hx
-    exact ⟨by positivity, hM s (List.mem_of_mem_filter (List.mem_of_mem_drop hs))⟩
+  exact ⟨(le_div_iff₀ hB).2 lo, (div_le_iff₀ hB).2 up⟩
 
-/-- **Anti-manipulation** (P6). S'il existe au moins un mois payé avant le
-dernier, augmenter (ou baisser) le dernier salaire de `Δ` déplace `SR`
-d'exactement `Δ / 24`. -/
-theorem salaireReference_sensibilite (h : List Centimes) (hh : ∃ s ∈ h, s ≠ 0)
-    {x : Centimes} (hx : x ≠ 0) (Δ : ℕ) :
-    salaireReference (h ++ [x + Δ]) - salaireReference (h ++ [x]) = Δ / 24 := by
-  have hpos : 0 < (moisPayes h).length := by
-    obtain ⟨s, hs, hs0⟩ := hh
-    exact List.length_pos_of_mem (List.mem_filter.2 ⟨hs, by simpa using hs0⟩)
-  have hw : versQ ((moisPayes h).drop ((moisPayes h).length + 1 - tailleFenetre)) ≠ [] := by
-    simp only [versQ, ne_eq, List.map_eq_nil_iff, List.drop_eq_nil_iff]
-    simp only [tailleFenetre]; omega
+/-- **Sensibilité au dernier salaire.** Modifier le dernier salaire de `Δ`
+déplace `SR` d'exactement `α Δ / B`, où `B` est la masse d'activité. -/
+theorem salaireReference_sensibilite (h : List MoisTravaille) (x : MoisTravaille) (Δ : ℕ) :
+    salaireReference (h ++ [{ x with salaire := x.salaire + Δ }]) - salaireReference (h ++ [x])
+      = alphaSR * Δ / masseActivite (h ++ [x]) := by
+  have hB : masseActivite (h ++ [{ x with salaire := x.salaire + Δ }]) = masseActivite (h ++ [x]) := by
+    simp only [masseActivite_snoc]
   unfold salaireReference
-  rw [fenetre_snoc h hx, fenetre_snoc h (x := x + Δ) (by simp [hx])]
-  have := ema_sensibilite_dernier alphaSR hw (x : ℚ) (Δ : ℚ)
-  push_cast
-  rw [this]
-  norm_num [alphaSR]
+  rw [hB, div_sub_div_same, masseSalaires_snoc, masseSalaires_snoc]
+  congr 1
+  push_cast; ring
+
+/-- Après au moins 60 mois à temps plein, la masse d'activité dépasse
+`1 − (23/24)^60`, soit plus de 11/12. -/
+theorem masseActivite_ge (p r : List MoisTravaille) (hr : ∀ x ∈ r, x.activite = 1) :
+    1 - (1 - alphaSR) ^ r.length ≤ masseActivite (p ++ r) := by
+  have hmap : r.map (·.activite) = List.replicate r.length 1 := by
+    rw [List.eq_replicate_iff]
+    simp only [List.length_map, List.mem_map, true_and]
+    rintro _ ⟨x, hx, rfl⟩
+    exact hr x hx
+  unfold masseActivite sommeExp
+  rw [List.map_append, List.foldl_append, hmap, foldl_pasEMA_replicate_one]
+  have h0 : 0 ≤ (p.map (·.activite)).foldl (pasEMA alphaSR) 0 := masseActivite_nonneg p
+  have h1 : 0 ≤ (1 - alphaSR) ^ r.length := pow_nonneg (by norm_num [alphaSR]) _
+  nlinarith
+
+theorem masseActivite_ge_onze_douziemes (p r : List MoisTravaille)
+    (hr : ∀ x ∈ r, x.activite = 1) (hlen : 60 ≤ r.length) :
+    11 / 12 ≤ masseActivite (p ++ r) := by
+  have := masseActivite_ge p r hr
+  have hp : (1 - alphaSR) ^ r.length ≤ (1 - alphaSR) ^ 60 :=
+    pow_le_pow_of_le_one (by norm_num [alphaSR]) (by norm_num [alphaSR]) hlen
+  have h60 : (1 - alphaSR) ^ 60 ≤ 1 / 12 := by norm_num [alphaSR]
+  linarith
+
+/-! ## Pas d'effet de seuil sur l'activité -/
+
+/-- Un mois suspendu ne change pas le salaire de référence. -/
+theorem salaireReference_suspendu (h : List MoisTravaille) :
+    salaireReference (h ++ [.suspendu]) = salaireReference h := by
+  simp only [salaireReference, masseSalaires_snoc, masseActivite_snoc, MoisTravaille.suspendu,
+    Nat.cast_zero, mul_zero, zero_add]
+  exact mul_div_mul_left _ _ (by norm_num [alphaSR])
+
+
+/-- **Un mois quelconque, comparé à un mois suspendu.** Formule exacte de
+l'écart entre `SR` après un mois `x` et `SR` après un mois suspendu, lorsque
+le contrat a déjà connu une activité. -/
+theorem salaireReference_mois (h : List MoisTravaille) (x : MoisTravaille)
+    (h0 : masseActivite (h ++ [.suspendu]) ≠ 0) :
+    salaireReference (h ++ [x]) - salaireReference (h ++ [.suspendu])
+      = alphaSR * (x.salaire - x.activite * salaireReference (h ++ [.suspendu]))
+          / masseActivite (h ++ [x]) := by
+  have hB := masseActivite_nonneg h
+  have hτ := x.activite_nonneg
+  simp only [salaireReference, masseSalaires_snoc, masseActivite_snoc,
+    MoisTravaille.suspendu] at h0 ⊢
+  simp only [Nat.cast_zero, mul_zero, zero_add] at h0 ⊢
+  have hBpos : 0 < masseActivite h := by
+    rcases hB.lt_or_eq with hB' | hB'
+    · exact hB'
+    · exfalso; apply h0; rw [← hB']; ring
+  have hα : 0 < 1 - alphaSR := by norm_num [alphaSR]
+  have h1 : alphaSR * x.activite + (1 - alphaSR) * masseActivite h ≠ 0 := by
+    have := alphaSR_pos; positivity
+  field_simp
   ring
+
+/-- **Continuité en l'activité.** L'écart avec un mois suspendu est au plus
+`α (s + τ·SR) / B` : il tend vers 0 quand le salaire `s` et l'activité `τ`
+du mois tendent vers 0. Un mois presque suspendu compte presque pas. -/
+theorem salaireReference_mois_proche (h : List MoisTravaille) (x : MoisTravaille)
+    (h0 : masseActivite (h ++ [.suspendu]) ≠ 0) :
+    |salaireReference (h ++ [x]) - salaireReference (h ++ [.suspendu])|
+      ≤ alphaSR * (x.salaire + x.activite * salaireReference (h ++ [.suspendu]))
+          / masseActivite (h ++ [.suspendu]) := by
+  rw [salaireReference_mois h x h0]
+  set sr := salaireReference (h ++ [.suspendu])
+  have hsr := salaireReference_nonneg (h ++ [.suspendu])
+  have hτ := x.activite_nonneg
+  have hs : (0 : ℚ) ≤ x.salaire := by positivity
+  have hB0 : 0 < masseActivite (h ++ [.suspendu]) :=
+    (masseActivite_nonneg _).lt_of_ne (Ne.symm h0)
+  have hB1 : masseActivite (h ++ [.suspendu]) ≤ masseActivite (h ++ [x]) := by
+    simp only [masseActivite_snoc, MoisTravaille.suspendu]
+    have := alphaSR_pos
+    nlinarith
+  have hα := alphaSR_pos
+  rw [abs_div, abs_of_pos (hB0.trans_le hB1)]
+  have hnum : |alphaSR * (x.salaire - x.activite * sr)| ≤ alphaSR * (x.salaire + x.activite * sr) := by
+    rw [abs_mul, abs_of_pos hα]
+    apply mul_le_mul_of_nonneg_left _ hα.le
+    rw [abs_le]
+    constructor <;> nlinarith
+  have hpos : 0 ≤ alphaSR * (x.salaire + x.activite * sr) :=
+    mul_nonneg hα.le (add_nonneg hs (mul_nonneg hτ hsr))
+  calc |alphaSR * (x.salaire - x.activite * sr)| / masseActivite (h ++ [x])
+      ≤ alphaSR * (x.salaire + x.activite * sr) / masseActivite (h ++ [x]) := by
+        have := masseActivite_nonneg (h ++ [x])
+        gcongr
+    _ ≤ alphaSR * (x.salaire + x.activite * sr) / masseActivite (h ++ [.suspendu]) := by
+        gcongr
+
+/-- **Mois partiel au prorata.** Un mois partiel payé au prorata du salaire de
+référence (`s = τ·SR`) laisse `SR` exactement inchangé par rapport à un mois
+suspendu : travailler quelques jours ne fait ni gagner ni perdre. -/
+theorem salaireReference_prorata (h : List MoisTravaille) (x : MoisTravaille)
+    (h0 : masseActivite (h ++ [.suspendu]) ≠ 0)
+    (hx : (x.salaire : ℚ) = x.activite * salaireReference (h ++ [.suspendu])) :
+    salaireReference (h ++ [x]) = salaireReference (h ++ [.suspendu]) := by
+  have := salaireReference_mois h x h0
+  rw [hx, sub_self, mul_zero, zero_div] at this
+  linarith
 
 end Prouvhommes

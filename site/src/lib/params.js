@@ -25,15 +25,6 @@ export const PARAM_SPECS = {
     display: (n) => String(n),
     describe: (n) => `${n} mois, soit ${n / 12} ans`,
   },
-  windowSize: {
-    query: "fenetre",
-    label: "Nombre de mois payés pris en compte",
-    min: 2, max: 99, step: 1,
-    law: 60,
-    toParam: (n) => n,
-    display: (n) => cardinal(n),
-    describe: (n) => `les ${n} derniers mois payés`,
-  },
   alpha: {
     query: "poids",
     label: "Poids de chaque nouveau mois",
@@ -109,5 +100,4 @@ export const params = new ParamStore();
 export const isLawParams = (p) =>
   eq(p.capMonths, LAW_PARAMS.capMonths) &&
   p.saturationMonths === LAW_PARAMS.saturationMonths &&
-  eq(p.alpha, LAW_PARAMS.alpha) &&
-  p.windowSize === LAW_PARAMS.windowSize;
+  eq(p.alpha, LAW_PARAMS.alpha);

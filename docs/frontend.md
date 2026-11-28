@@ -18,7 +18,7 @@
 |---|---|
 | Lecteur d'articles | Concepts 1 à 3 ; niveau d'impérativité en marge (M4) |
 | Simulateur d'indemnité | P6 exact, courbe smoothstep comparée au droit actuel |
-| Démo anti-manipulation | Varier le dernier salaire : SR ne bouge que de Δ/24 |
+| Démo anti-manipulation | Varier le dernier salaire : SR ne bouge que de αΔ/B (moins de Δ/22 après 5 ans à temps plein) |
 | Tableau des preuves | Promesses en français, statut (prouvé, `sorry`, à écrire), lien vers le théorème |
 
 ## Structure du site (décidé le 27/11/2026)

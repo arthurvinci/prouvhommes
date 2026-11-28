@@ -29,14 +29,13 @@ const FEATURED = [
 ];
 
 /** Text of each live threshold before the script runs (the law's values). */
-const PARAM_TEXT = { capMonths: "6", saturationMonths: "240", alpha: "vingt-quatrième", windowSize: "soixante" };
+const PARAM_TEXT = { capMonths: "6", saturationMonths: "240", alpha: "vingt-quatrième" };
 const PARAM_LABEL = {
   capMonths: ["Plafond", "mois de salaire de référence"],
   saturationMonths: ["Plafond atteint après", "mois d’ancienneté"],
   alpha: ["Poids du dernier mois : un", "du salaire"],
-  windowSize: ["Mois pris en compte :", "derniers mois payés"],
 };
-const PARAM_LINK = { capMonths: "cap", saturationMonths: "saturation", windowSize: "window", alpha: "alpha" };
+const PARAM_LINK = { capMonths: "cap", saturationMonths: "saturation", alpha: "alpha" };
 
 export function buildPages(law, warn = console.warn) {
   const pages = new Map();

@@ -5,6 +5,7 @@ import Prouvhommes.Hierarchie
 import Prouvhommes.TempsDeTravail
 import Prouvhommes.HeuresSup
 import Prouvhommes.Conges
+import Prouvhommes.Modele
 
 /-!
 # Vitrine
@@ -18,13 +19,22 @@ qu'une partie.
 
 namespace Prouvhommes
 
-/-! ## Préavis (P4) -/
+/-! ## Préavis (P3, P4) -/
 
-/-- info: 'Prouvhommes.preavisLegal_ge_30' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in #print axioms preavisLegal_ge_30
+/-! Le préavis n'est jamais inférieur à 7 jours. -/
 
-/-- info: 'Prouvhommes.preavisLegal_monotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in #print axioms preavisLegal_monotone
+/-- info: 'Prouvhommes.preavis_ge_7' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms preavis_ge_7
+
+/-! Le préavis croît avec l'ancienneté. -/
+
+/-- info: 'Prouvhommes.preavis_monotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms preavis_monotone
+
+/-! Pas d'effet de seuil : notifier un jour plus tard fait finir le contrat 1 ou 2 jours plus tard, jamais plus. -/
+
+/-- info: 'Prouvhommes.fin_preavis_succ' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms fin_preavis_succ
 
 /-! ## Indemnité de rupture (P6) -/
 
@@ -33,15 +43,25 @@ namespace Prouvhommes
 /-- info: 'Prouvhommes.indemniteRupture_le_plafond' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms indemniteRupture_le_plafond
 
-/-! T-MANIP : baisser le dernier salaire de Δ baisse l'indemnité de moins de Δ/4 + 1 centime. -/
+/-! T-MANIP : après 5 ans à temps plein, baisser le dernier salaire de Δ baisse l'indemnité de moins de 3Δ/11 + 1 centime. -/
 
 /-- info: 'Prouvhommes.indemniteRupture_manipulation' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms indemniteRupture_manipulation
 
-/-! Le dernier salaire ne pèse que 1/24 dans le salaire de référence. -/
+/-! Le dernier salaire pèse exactement α/B dans le salaire de référence (moins de 1/22 après 5 ans à temps plein). -/
 
 /-- info: 'Prouvhommes.salaireReference_sensibilite' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms salaireReference_sensibilite
+
+/-! Un mois partiel payé au prorata ne change pas le salaire de référence. -/
+
+/-- info: 'Prouvhommes.salaireReference_prorata' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms salaireReference_prorata
+
+/-! Un mois presque suspendu compte presque pas : le salaire de référence est continu en l'activité. -/
+
+/-- info: 'Prouvhommes.salaireReference_mois_proche' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms salaireReference_mois_proche
 
 /-! Pas d'indemnité hors licenciement ordinaire. -/
 
@@ -53,6 +73,11 @@ namespace Prouvhommes
 /-- info: 'Prouvhommes.indemnite_mono_anciennete' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms indemnite_mono_anciennete
 
+/-! Pas d'effet de seuil : un mois d'ancienneté de plus augmente l'indemnité de moins de 3/80 du salaire de référence, plus un centime. -/
+
+/-- info: 'Prouvhommes.indemnite_saut_mensuel' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms indemnite_saut_mensuel
+
 /-! ## Rupture (P1, P3, P4, P8, P9, P9 bis) -/
 
 /-! T-PREAVIS : toute fin est justifiée par un préavis couru, un juste motif, un accord écrit ou un décès. -/
@@ -60,7 +85,7 @@ namespace Prouvhommes
 /-- info: 'Prouvhommes.fin_justifiee' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms fin_justifiee
 
-/-! Une relation résiliée après l'essai dure au moins durée d'essai + 30 jours. -/
+/-! Un licenciement après l'essai laisse au moins la durée d'essai plus le préavis à la fin de l'essai (60 jours pour l'essai par défaut), quels que soient l'accord d'entreprise et le contrat. -/
 
 /-- info: 'Prouvhommes.duree_minimale' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms duree_minimale
@@ -89,6 +114,23 @@ namespace Prouvhommes
 
 /-- info: 'Prouvhommes.protection_suspend' depends on axioms: [propext, Classical.choice] -/
 #guard_msgs in #print axioms protection_suspend
+
+/-! ## Modèle composé : conventions, rupture et indemnité ensemble -/
+
+/-! Pour l'employeur, faire signer un accord écrit au lieu de licencier met fin au contrat plus tôt, sans préavis ni indemnité. -/
+
+/-- info: 'Prouvhommes.accord_domine_licenciement' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms accord_domine_licenciement
+
+/-! Un licenciement reçu au jour 364 finit au jour 423, reçu au jour 365 il finit au jour 425 (31 jours plus tard avec les anciens paliers). -/
+
+/-- info: 'Prouvhommes.continuite_preavis' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms continuite_preavis
+
+/-! La durée minimale ne vaut pas pour la démission : un contrat peut ramener le préavis du salarié à zéro. -/
+
+/-- info: 'Prouvhommes.demission_sans_duree_minimale' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms demission_sans_duree_minimale
 
 /-! ## Hiérarchie des normes (M4, P15) -/
 

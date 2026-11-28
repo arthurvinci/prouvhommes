@@ -1,10 +1,11 @@
 // Anti-manipulation demo (salaireReference_sensibilite, T-MANIP): change the
-// last salary and watch the reference salary move by only Δ/24, and the
-// severance by less than Δ/4 + 1 cent. A bar chart shows each month's weight.
+// last salary and watch the reference salary move by only αΔ/B, and, after
+// 5 years, the severance by less than 3Δ/11 + 1 cent. A bar chart shows each
+// month's weight.
 
 import { params } from "../lib/params.js";
 import { referenceSalary, severancePay } from "../lib/p6.js";
-import { sub, mul, pow, ONE, toNumber } from "../lib/rational.js";
+import { sub, mul, div, pow, ONE, toNumber } from "../lib/rational.js";
 import { euros, eurosOfRational, parseEuros, seniority } from "../lib/format.js";
 
 const FIRED = { kind: "ordinaryTermination", party: "employer" };
@@ -60,7 +61,7 @@ ${
     const last = (usual * BigInt(pct)) / 100n;
     const delta = last - usual;
     const m = Number(seniorityInput.value);
-    const months = Math.max(2, Math.min(m, p.windowSize));
+    const months = Math.max(2, m);
     const base = Array.from({ length: months - 1 }, () => usual);
 
     $('[data-out="last"]').textContent = `${euros(last)} (${pct} % du salaire habituel)`;
@@ -77,15 +78,19 @@ ${
     const sign = (c) => (c > 0n ? "+" : "");
 
     $('[data-out="delta"]').textContent = `${sign(delta)}${euros(delta)}`;
-    $('[data-out="sr"]').innerHTML = `${eurosOfRational(srNew)} <span class="delta">${sign(delta)}${eurosOfRational(sub(srNew, srUsual))}, soit Δ/${p.alpha.d}</span>`;
+    const w = weights(months, p.alpha);
+    $('[data-out="sr"]').innerHTML = `${eurosOfRational(srNew)} <span class="delta">${sign(delta)}${eurosOfRational(sub(srNew, srUsual))}, soit ${pctText(w[months - 1])} de Δ</span>`;
     const payDelta = payNew - payUsual;
     const absDelta = delta < 0n ? -delta : delta;
-    $('[data-out="pay"]').innerHTML = `${euros(payNew)} <span class="delta">${sign(payDelta)}${euros(payDelta)}, ${params.isLaw ? "borne prouvée" : "borne promise"} : moins de ${euros((absDelta + 3n) / 4n + 1n)}</span>`;
+    const bound = months >= 60
+      ? `${params.isLaw ? "borne prouvée" : "borne promise"} : moins de ${euros((3n * absDelta + 10n) / 11n + 1n)}`
+      : "borne prouvée à partir de 5 ans d’ancienneté";
+    $('[data-out="pay"]').innerHTML = `${euros(payNew)} <span class="delta">${sign(payDelta)}${euros(payDelta)}, ${bound}</span>`;
 
     if (compact) return;
     renderWeights($("[data-weights]"), $("[data-tooltip]"), months, p.alpha);
     $('[data-out="weights-caption"]').textContent =
-      `Poids de chacun des ${months} mois pris en compte dans le salaire de référence. Le dernier mois pèse 1/${p.alpha.d}.`;
+      `Poids de chacun des ${months} mois du contrat dans le salaire de référence. Le dernier mois pèse ${pctText(w[months - 1])}, et le poids décroît régulièrement avec l’âge du mois : aucun mois ne sort d’un coup.`;
   }
 
   usualInput.addEventListener("input", () => {
@@ -106,13 +111,12 @@ ${
   render();
 }
 
-/** Weight of each month in the EMA: the first keeps (1 − α)^(n−1), month i
- * gets α(1 − α)^(n−1−i). */
+/** Weight of each full month in the reference salary: month i of n gets
+ * α(1 − α)^(n−1−i) / B, with B = 1 − (1 − α)^n the activity mass. */
 function weights(n, alpha) {
   const keep = sub(ONE, alpha);
-  return Array.from({ length: n }, (_, i) =>
-    i === 0 ? pow(keep, n - 1) : mul(alpha, pow(keep, n - 1 - i)),
-  );
+  const mass = sub(ONE, pow(keep, n));
+  return Array.from({ length: n }, (_, i) => div(mul(alpha, pow(keep, n - 1 - i)), mass));
 }
 
 function renderWeights(svg, tooltip, n, alpha) {
@@ -162,7 +166,7 @@ function renderWeights(svg, tooltip, n, alpha) {
     const hit = el("rect", { class: "hit", x: pad.left + i * band, y: pad.top, width: band, height: ih });
     hit.addEventListener("pointerenter", () => {
       tooltip.hidden = false;
-      tooltip.innerHTML = `<strong>${i === n - 1 ? "Dernier mois" : i === 0 ? "Premier mois de la fenêtre" : `Mois ${i + 1} sur ${n}`}</strong><span>Poids : ${pctText(w[i])}</span>`;
+      tooltip.innerHTML = `<strong>${i === n - 1 ? "Dernier mois" : i === 0 ? "Premier mois du contrat" : `Mois ${i + 1} sur ${n}`}</strong><span>Poids : ${pctText(w[i])}</span>`;
       const box = svg.getBoundingClientRect();
       const left = ((pad.left + i * band) / W) * box.width;
       tooltip.style.left = `${Math.min(left + 8, box.width - tooltip.offsetWidth - 4)}px`;
