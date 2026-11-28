@@ -183,7 +183,8 @@ var { font-style: italic; }
   font-size: 0.8125rem;
   color: var(--ink-soft);
 }
-.promise-article { color: var(--ink-soft); }
+.promise-article, .promise-section { color: var(--ink-soft); }
+.part-lede { max-width: var(--measure); margin: 0 0 1.25rem; color: var(--ink-soft); }
 .promise-tag { font-family: var(--font-mono); font-size: 0.75rem; }
 
 .status { font-family: var(--font-sans); font-weight: 500; }
@@ -511,6 +512,7 @@ h1.article-title { font-size: clamp(1.9rem, 1.4rem + 1.5vw, 2.5rem); }
 .field label { font-weight: 500; }
 .field output { color: var(--ink-soft); font-size: 0.875rem; font-variant-numeric: tabular-nums; }
 .field-error { margin: 0; color: var(--bad); font-size: 0.8125rem; }
+.field-hint { margin: 0; color: var(--ink-soft); font-size: 0.8125rem; }
 .field-error:empty { display: none; }
 .input-euro { display: inline-flex; align-items: center; gap: 0.4rem; }
 .input-euro input, .field select {
@@ -607,6 +609,9 @@ h1.article-title { font-size: clamp(1.9rem, 1.4rem + 1.5vw, 2.5rem); }
 .chart .direct-label { fill: var(--ink); font-size: 12px; }
 .chart .marker { fill: var(--series-code); stroke: var(--paper-raised); stroke-width: 2; }
 .chart .crosshair { stroke: var(--ink-soft); stroke-width: 1; }
+.chart .waypoint { fill: var(--paper-raised); stroke: var(--series-code); stroke-width: 1.5; }
+.chart .hit { cursor: crosshair; }
+.notice-next { margin-top: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
 .chart .hit { fill: transparent; }
 .chart .bar { fill: var(--ink-soft); opacity: 0.45; }
 .chart .bar-last { fill: var(--accent); opacity: 1; }

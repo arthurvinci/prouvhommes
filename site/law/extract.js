@@ -12,7 +12,7 @@ import { join } from "node:path";
  * @typedef {{ name: string, kind: string, file: string, line: number,
  *   doc: string | null, source: string,
  *   parent: { name: string, kind: string, header: string } | null }} LeanDecl
- * @typedef {{ name: string, summary: string | null }} ShowcaseEntry
+ * @typedef {{ name: string, summary: string | null, section: string | null }} ShowcaseEntry
  */
 
 /** Reads the articles of texte/main.tex, in document order. */
@@ -105,13 +105,16 @@ export function readShowcase(leanDir) {
   const src = readFileSync(join(leanDir, "Prouvhommes", "Vitrine.lean"), "utf8");
   const entries = [];
   let summary = null;
+  let section = null;
   for (const m of src.matchAll(/\/-!\s*([\s\S]*?)-\/|#print axioms\s+(\S+)/g)) {
     if (m[1] !== undefined) {
       const text = m[1].trim();
       // Section headings ("## …") reset the summary; plain notes become it.
+      const heading = text.match(/^##\s+(.*)$/);
+      if (heading) section = heading[1].replace(/'/g, "’");
       summary = text.startsWith("#") ? null : text;
     } else {
-      entries.push({ name: m[2], summary });
+      entries.push({ name: m[2], summary, section });
       summary = null;
     }
   }

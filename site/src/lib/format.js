@@ -43,6 +43,17 @@ export function seniority(months) {
   return [years, rest].filter(Boolean).join(" et ") || "0 mois";
 }
 
+/** 1 → "1 jour", 3285 → "3 285 jours" */
+export const days = (n) => `${groupThousands(String(n))} jour${n > 1 ? "s" : ""}`;
+
+/** Seniority in days (365 a year, as in the text): 400 → "1 an et 35 jours" */
+export function seniorityDays(j) {
+  const y = Math.floor(j / 365);
+  const d = j % 365;
+  const years = y === 0 ? "" : `${y} an${y > 1 ? "s" : ""}`;
+  return [years, d === 0 ? "" : days(d)].filter(Boolean).join(" et ") || "0 jour";
+}
+
 /** "3000" or "3 000,50" typed by a user → cents, or null. */
 export function parseEuros(text) {
   const clean = String(text).replace(/[\s  €]/g, "").replace(",", ".");

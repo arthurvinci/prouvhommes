@@ -47,6 +47,19 @@ const CHECKS = {
     };
   },
 
+  // Only an agreement or the contract goes past 6 months: without one, the
+  // applicable severance is the legal one, so this stands or falls with T-PLAFOND.
+  indemnite_applicable_le_plafond(p) {
+    const legal = CHECKS.indemniteRupture_le_plafond(p);
+    if (legal.state === "broken") {
+      return { state: "broken", text: legal.text.replace("Contre-exemple :", "Contre-exemple, sans accord ni contrat :") };
+    }
+    return {
+      state: "checked",
+      text: "Tenue : sans accord ni contrat, l’indemnité reste sous 6 mois de salaire ; seule une convention peut aller au-delà, jusqu’à ce qu’elle stipule.",
+    };
+  },
+
   // T-MANIP: after 5 years full time, lowering the last salary by Δ costs
   // less than 3Δ/11 + 1 cent.
   indemniteRupture_manipulation(p) {
